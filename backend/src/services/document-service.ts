@@ -16,8 +16,8 @@ export class DocumentService {
     const result = await pool.query(
       `INSERT INTO documents (id, application_id, document_type, file_name, file_size, mime_type, storage_path, uploaded_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [id, applicationId, data.document_type, data.file_name, data.file_size || null,
-       data.mime_type || null, storagePath, data.uploaded_by || null]
+      [id, applicationId, data.document_type, data.file_name, data.file_size ?? null,
+       data.mime_type ?? null, storagePath, data.uploaded_by ?? null]
     );
 
     // Emit audit event

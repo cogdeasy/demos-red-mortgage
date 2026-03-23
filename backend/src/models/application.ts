@@ -55,13 +55,13 @@ export const SubmitApplicationSchema = z.object({
   applicant_first_name: z.string().min(1).max(100),
   applicant_last_name: z.string().min(1).max(100),
   applicant_email: z.string().email().max(255),
-  applicant_annual_income: z.number().positive(),
-  property_value: z.number().positive(),
+  applicant_annual_income: z.coerce.number().positive(),
+  property_value: z.coerce.number().positive(),
   property_address_line1: z.string().min(1).max(255),
   property_city: z.string().min(1).max(100),
   property_postcode: z.string().min(1).max(20),
-  loan_amount: z.number().positive(),
-  loan_term_months: z.number().int().min(12).max(480),
+  loan_amount: z.coerce.number().positive(),
+  loan_term_months: z.coerce.number().int().min(12).max(480),
 });
 
 export interface Application {
