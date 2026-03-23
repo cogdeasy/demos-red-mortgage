@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../config/database';
 import { CreditCheck, RiskBandType, getRiskBand } from '../models/credit-check';
+import { ConflictError } from '../errors';
 
 interface CreditCheckRequest {
   application_id: string;
@@ -25,11 +26,9 @@ export class CreditCheckService {
   async runCheck(request: CreditCheckRequest): Promise<CreditCheck> {
     const existing = await this.getByApplicationId(request.application_id);
     if (existing) {
-      const error = new Error(
+      throw new ConflictError(
         `Credit check already exists for application ${request.application_id}`
       );
-      (error as Error & { status: number }).status = 409;
-      throw error;
     }
 
     const providerResponse = this.callMockProvider(request);

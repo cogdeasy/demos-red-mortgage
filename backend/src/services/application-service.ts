@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../config/database';
 import { Application, ApplicationStatusType, ApplicationStatus, AuditEvent } from '../models/application';
+import { ConflictError } from '../errors';
 
 export class ApplicationService {
   async create(data: Partial<Application>): Promise<Application> {
@@ -200,7 +201,7 @@ export class ApplicationService {
     const existing = await this.getById(id);
     if (!existing) return null;
     if (existing.status !== ApplicationStatus.DRAFT) {
-      throw new Error(`Cannot submit application in status: ${existing.status}`);
+      throw new ConflictError(`Cannot submit application in status: ${existing.status}`);
     }
 
     const result = await pool.query(
@@ -227,7 +228,7 @@ export class ApplicationService {
 
     const validStatuses: readonly ApplicationStatusType[] = [ApplicationStatus.SUBMITTED, ApplicationStatus.UNDER_REVIEW];
     if (!validStatuses.includes(existing.status)) {
-      throw new Error(`Cannot decide on application in status: ${existing.status}`);
+      throw new ConflictError(`Cannot decide on application in status: ${existing.status}`);
     }
 
     const result = await pool.query(

@@ -1,4 +1,5 @@
 import { CreditCheckService } from '../../src/services/credit-check-service';
+import { ConflictError } from '../../src/errors';
 import pool from '../../src/config/database';
 
 // Mock the database pool
@@ -89,8 +90,9 @@ describe('CreditCheckService', () => {
         await service.runCheck(baseRequest);
         fail('Expected error to be thrown');
       } catch (error) {
-        expect((error as Error).message).toContain('Credit check already exists');
-        expect((error as Error & { status: number }).status).toBe(409);
+        expect(error).toBeInstanceOf(ConflictError);
+        expect((error as ConflictError).message).toContain('Credit check already exists');
+        expect((error as ConflictError).status).toBe(409);
       }
 
       // Should only have queried once (the SELECT), not attempted INSERT

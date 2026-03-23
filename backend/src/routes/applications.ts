@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { applicationService } from '../services/application-service';
 import { CreateApplicationSchema, UpdateApplicationSchema, SubmitApplicationSchema } from '../models/application';
 import { ZodError } from 'zod';
+import { ConflictError } from '../errors';
 
 const router = Router();
 
@@ -113,7 +114,7 @@ router.post('/:id/submit', async (req: Request, res: Response) => {
       });
       return;
     }
-    if (error instanceof Error) {
+    if (error instanceof ConflictError) {
       res.status(409).json({ error: error.message });
       return;
     }
@@ -141,7 +142,7 @@ router.post('/:id/decide', async (req: Request, res: Response) => {
     }
     res.json(application);
   } catch (error) {
-    if (error instanceof Error) {
+    if (error instanceof ConflictError) {
       res.status(409).json({ error: error.message });
       return;
     }
