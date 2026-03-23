@@ -65,28 +65,39 @@ export class AffordabilityService {
     const id = uuidv4();
     const now = new Date().toISOString();
 
-    const result = await pool.query(
-      `INSERT INTO affordability_checks (
-        id, application_id, gross_monthly_income, declared_monthly_outgoings,
-        mortgage_payment_current, mortgage_payment_stressed,
-        dti_ratio_current, dti_ratio_stressed,
-        verdict, verdict_reason, checked_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      RETURNING *`,
-      [
-        id,
-        applicationId,
-        Math.round(grossMonthlyIncome * 100) / 100,
-        Math.round(declaredMonthlyOutgoings * 100) / 100,
-        Math.round(mortgagePaymentCurrent * 100) / 100,
-        Math.round(mortgagePaymentStressed * 100) / 100,
-        Math.round(dtiCurrent * 10000) / 10000,
-        Math.round(dtiStressed * 10000) / 10000,
-        verdict,
-        verdictReason,
-        now,
-      ]
-    );
+    let result;
+    try {
+      result = await pool.query(
+        `INSERT INTO affordability_checks (
+          id, application_id, gross_monthly_income, declared_monthly_outgoings,
+          mortgage_payment_current, mortgage_payment_stressed,
+          dti_ratio_current, dti_ratio_stressed,
+          verdict, verdict_reason, checked_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        RETURNING *`,
+        [
+          id,
+          applicationId,
+          Math.round(grossMonthlyIncome * 100) / 100,
+          Math.round(declaredMonthlyOutgoings * 100) / 100,
+          Math.round(mortgagePaymentCurrent * 100) / 100,
+          Math.round(mortgagePaymentStressed * 100) / 100,
+          Math.round(dtiCurrent * 10000) / 10000,
+          Math.round(dtiStressed * 10000) / 10000,
+          verdict,
+          verdictReason,
+          now,
+        ]
+      );
+    } catch (err: unknown) {
+      const dbError = err as { code?: string };
+      if (dbError.code === '23505') {
+        throw new ConflictError(
+          `Affordability check already exists for application ${applicationId}`
+        );
+      }
+      throw err;
+    }
 
     await this.emitAuditEvent(id, applicationId, verdict, dtiStressed);
 

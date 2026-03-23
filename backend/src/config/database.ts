@@ -102,7 +102,7 @@ export async function initDatabase(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_audit_events_entity ON audit_events(entity_type, entity_id);
       CREATE TABLE IF NOT EXISTS affordability_checks (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        application_id UUID UNIQUE NOT NULL REFERENCES applications(id),
+        application_id UUID UNIQUE NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
         gross_monthly_income DECIMAL(15,2) NOT NULL,
         declared_monthly_outgoings DECIMAL(15,2) NOT NULL,
         mortgage_payment_current DECIMAL(15,2) NOT NULL,
