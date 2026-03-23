@@ -1,0 +1,39 @@
+{
+  "name": "mortgage-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mortgage origination API — Express + TypeScript + PostgreSQL",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src/ tests/ --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "test": "jest --passWithNoTests",
+    "test:unit": "jest --testPathPattern=tests/unit --passWithNoTests",
+    "test:integration": "jest --testPathPattern=tests/integration --passWithNoTests"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "pg": "^8.13.0",
+    "uuid": "^10.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.9.0",
+    "@types/pg": "^8.11.10",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "testcontainers": "^10.15.0",
+    "ts-jest": "^29.2.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
