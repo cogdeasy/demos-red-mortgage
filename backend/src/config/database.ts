@@ -78,12 +78,25 @@ export async function initDatabase(): Promise<void> {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS credit_checks (
+        id UUID PRIMARY KEY,
+        application_id UUID NOT NULL UNIQUE REFERENCES applications(id) ON DELETE CASCADE,
+        credit_score INTEGER NOT NULL,
+        risk_band VARCHAR(20) NOT NULL,
+        provider VARCHAR(50) NOT NULL,
+        request_payload JSONB,
+        response_payload JSONB,
+        checked_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+
       CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
       CREATE INDEX IF NOT EXISTS idx_applications_email ON applications(applicant_email);
       CREATE INDEX IF NOT EXISTS idx_documents_application_id ON documents(application_id);
       CREATE INDEX IF NOT EXISTS idx_notes_application_id ON notes(application_id);
       CREATE INDEX IF NOT EXISTS idx_audit_events_application_id ON audit_events(application_id);
       CREATE INDEX IF NOT EXISTS idx_audit_events_entity ON audit_events(entity_type, entity_id);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_credit_checks_application_id ON credit_checks(application_id);
     `);
     console.log('Database tables initialized');
   } finally {
