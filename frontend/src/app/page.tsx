@@ -84,11 +84,13 @@ export default function Dashboard() {
   };
 
   const handleStatusChange = (value: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     setStatusFilter(value);
     fetchApplications(search, value, sortBy, sortOrder);
   };
 
   const handleSort = (column: SortColumn) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     const newOrder: SortOrder = sortBy === column && sortOrder === 'asc' ? 'desc' : 'asc';
     setSortBy(column);
     setSortOrder(newOrder);
