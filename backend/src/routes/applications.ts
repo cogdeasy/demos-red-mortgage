@@ -5,18 +5,25 @@ import { ZodError } from 'zod';
 
 const router = Router();
 
-// GET /api/v1/applications — List applications with filtering
+// GET /api/v1/applications — List applications with filtering, search, and sort
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { status, email, page, limit } = req.query;
+    const { status, email, search, sort_by, sort_order, page, limit } = req.query;
     const result = await applicationService.list({
       status: status as string | undefined,
       email: email as string | undefined,
+      search: search as string | undefined,
+      sort_by: sort_by as string | undefined,
+      sort_order: sort_order as string | undefined,
       page: page ? parseInt(page as string, 10) : undefined,
       limit: limit ? parseInt(limit as string, 10) : undefined,
     });
     res.json(result);
   } catch (error) {
+    if (error instanceof Error && error.message.startsWith('Invalid sort column')) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
     console.error('Error listing applications:', error);
     res.status(500).json({ error: 'Internal server error' });
   }

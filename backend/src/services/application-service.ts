@@ -63,9 +63,16 @@ export class ApplicationService {
     return result.rows[0] || null;
   }
 
+  private static readonly VALID_SORT_COLUMNS = new Set([
+    'created_at', 'loan_amount', 'ltv_ratio', 'applicant_last_name', 'property_city',
+  ]);
+
   async list(filters: {
     status?: string;
     email?: string;
+    search?: string;
+    sort_by?: string;
+    sort_order?: string;
     page?: number;
     limit?: number;
   }): Promise<{ data: Application[]; total: number; page: number; limit: number }> {
@@ -84,6 +91,26 @@ export class ApplicationService {
       conditions.push(`applicant_email ILIKE $${paramIndex++}`);
       params.push(`%${filters.email}%`);
     }
+    if (filters.search) {
+      conditions.push(
+        `(applicant_first_name || ' ' || applicant_last_name ILIKE $${paramIndex}
+          OR applicant_email ILIKE $${paramIndex}
+          OR COALESCE(property_postcode, '') ILIKE $${paramIndex}
+          OR COALESCE(property_city, '') ILIKE $${paramIndex})`
+      );
+      params.push(`%${filters.search}%`);
+      paramIndex++;
+    }
+
+    // Validate sort column
+    const sortBy = filters.sort_by && ApplicationService.VALID_SORT_COLUMNS.has(filters.sort_by)
+      ? filters.sort_by
+      : 'created_at';
+    const sortOrder = filters.sort_order === 'asc' ? 'ASC' : 'DESC';
+
+    if (filters.sort_by && !ApplicationService.VALID_SORT_COLUMNS.has(filters.sort_by)) {
+      throw new Error(`Invalid sort column: ${filters.sort_by}`);
+    }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -93,7 +120,7 @@ export class ApplicationService {
     );
 
     const dataResult = await pool.query(
-      `SELECT * FROM applications ${whereClause} ORDER BY created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex}`,
+      `SELECT * FROM applications ${whereClause} ORDER BY ${sortBy} ${sortOrder} LIMIT $${paramIndex++} OFFSET $${paramIndex}`,
       [...params, limit, offset]
     );
 

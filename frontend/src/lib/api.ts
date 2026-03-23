@@ -64,9 +64,12 @@ async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   applications: {
-    list: (params?: { status?: string; page?: number }) => {
+    list: (params?: { status?: string; search?: string; sort_by?: string; sort_order?: string; page?: number }) => {
       const query = new URLSearchParams();
       if (params?.status) query.set('status', params.status);
+      if (params?.search) query.set('search', params.search);
+      if (params?.sort_by) query.set('sort_by', params.sort_by);
+      if (params?.sort_order) query.set('sort_order', params.sort_order);
       if (params?.page) query.set('page', String(params.page));
       return fetchApi<{ data: Application[]; total: number; page: number; limit: number }>(
         `/applications?${query}`
