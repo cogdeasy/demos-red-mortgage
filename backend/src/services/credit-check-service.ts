@@ -37,24 +37,35 @@ export class CreditCheckService {
     const id = uuidv4();
     const now = new Date().toISOString();
 
-    const result = await pool.query(
-      `INSERT INTO credit_checks (
-        id, application_id, credit_score, risk_band, provider,
-        request_payload, response_payload, checked_at, created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING *`,
-      [
-        id,
-        request.application_id,
-        providerResponse.credit_score,
-        riskBand,
-        providerResponse.provider,
-        JSON.stringify(request),
-        JSON.stringify(providerResponse.raw_response),
-        now,
-        now,
-      ]
-    );
+    let result;
+    try {
+      result = await pool.query(
+        `INSERT INTO credit_checks (
+          id, application_id, credit_score, risk_band, provider,
+          request_payload, response_payload, checked_at, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING *`,
+        [
+          id,
+          request.application_id,
+          providerResponse.credit_score,
+          riskBand,
+          providerResponse.provider,
+          JSON.stringify(request),
+          JSON.stringify(providerResponse.raw_response),
+          now,
+          now,
+        ]
+      );
+    } catch (error: unknown) {
+      const pgError = error as { code?: string };
+      if (pgError.code === '23505') {
+        throw new ConflictError(
+          `Credit check already exists for application ${request.application_id}`
+        );
+      }
+      throw error;
+    }
 
     await this.emitAuditEvent(id, request.application_id, riskBand, providerResponse.credit_score);
 
