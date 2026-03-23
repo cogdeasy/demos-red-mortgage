@@ -3,6 +3,7 @@ import cors from 'cors';
 import { initDatabase } from './config/database';
 import applicationRoutes from './routes/applications';
 import documentRoutes from './routes/documents';
+import creditCheckRoutes from './routes/credit-checks';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,6 +20,7 @@ app.get('/health', (_req, res) => {
 // Routes
 app.use('/api/v1/applications', applicationRoutes);
 app.use('/api/v1/applications', documentRoutes);
+app.use('/api/v1/applications', creditCheckRoutes);
 // Document verification uses a different base path
 app.use('/api/v1/documents', documentRoutes);
 
