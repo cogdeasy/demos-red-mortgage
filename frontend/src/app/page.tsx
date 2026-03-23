@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { api, Application, DashboardStats } from '@/lib/api';
 import Link from 'next/link';
+import Image from 'next/image';
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(amount);
@@ -41,13 +42,11 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="top-accent" />
       <header className="header">
         <div className="container header-content">
-          <div className="header-logo">
-            <div className="logo-mark">▲</div>
-            <h1>HSBC Mortgage Services</h1>
-          </div>
+          <a href="/" className="header-logo">
+            <Image src="/hsbc-logo.svg" alt="HSBC" width={120} height={32} priority />
+          </a>
           <nav className="header-nav">
             <a href="/" className="active">Dashboard</a>
             <Link href="/applications/new">New Application</Link>
