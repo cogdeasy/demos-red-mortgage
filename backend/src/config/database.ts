@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://mortgage:mortgage_secret@localhost:5432/mortgage',
+  connectionString: process.env.DATABASE_URL || 'postgresql://mortgage:mortgage_dev@localhost:5432/mortgage',
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,

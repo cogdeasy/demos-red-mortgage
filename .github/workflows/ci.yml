@@ -16,9 +16,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: backend/package-lock.json
-      - run: cd backend && npm ci
-      - run: cd backend && npm run lint
+      - run: npm ci
+      - run: npm run lint -w backend
 
   backend-typecheck:
     name: Backend Type Check
@@ -29,9 +28,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: backend/package-lock.json
-      - run: cd backend && npm ci
-      - run: cd backend && npm run typecheck
+      - run: npm ci
+      - run: npm run typecheck -w backend
 
   backend-test:
     name: Backend Tests
@@ -42,9 +40,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: backend/package-lock.json
-      - run: cd backend && npm ci
-      - run: cd backend && npm run test:unit
+      - run: npm ci
+      - run: npm run test:unit -w backend
 
   backend-build:
     name: Backend Build
@@ -55,9 +52,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: backend/package-lock.json
-      - run: cd backend && npm ci
-      - run: cd backend && npm run build
+      - run: npm ci
+      - run: npm run build -w backend
 
   frontend-lint:
     name: Frontend Lint
@@ -68,9 +64,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: cd frontend && npm ci
-      - run: cd frontend && npm run lint
+      - run: npm ci
+      - run: npm run lint -w frontend
 
   frontend-typecheck:
     name: Frontend Type Check
@@ -81,9 +76,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: cd frontend && npm ci
-      - run: cd frontend && npm run typecheck
+      - run: npm ci
+      - run: npm run typecheck -w frontend
 
   frontend-build:
     name: Frontend Build
@@ -94,6 +88,5 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - run: cd frontend && npm ci
-      - run: cd frontend && npm run build
+      - run: npm ci
+      - run: npm run build -w frontend
