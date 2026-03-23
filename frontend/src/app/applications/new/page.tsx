@@ -31,6 +31,10 @@ export default function NewApplication() {
       property_postcode: formData.get('postcode') as string || undefined,
       property_type: formData.get('property_type') as string || undefined,
       property_value: formData.get('property_value') ? Number(formData.get('property_value')) : undefined,
+      monthly_rent_or_mortgage: formData.get('monthly_rent_or_mortgage') ? Number(formData.get('monthly_rent_or_mortgage')) : undefined,
+      monthly_credit_commitments: formData.get('monthly_credit_commitments') ? Number(formData.get('monthly_credit_commitments')) : undefined,
+      monthly_living_costs: formData.get('monthly_living_costs') ? Number(formData.get('monthly_living_costs')) : undefined,
+      number_of_dependants: formData.get('number_of_dependants') ? Number(formData.get('number_of_dependants')) : undefined,
       loan_amount: Number(formData.get('loan_amount')),
       loan_term_months: Number(formData.get('loan_term')) * 12,
       loan_type: formData.get('loan_type') as string || 'fixed',
@@ -142,6 +146,28 @@ export default function NewApplication() {
                   <div className="form-group">
                     <label htmlFor="property_value">Property Value (GBP)</label>
                     <input id="property_value" name="property_value" type="number" min="0" step="1000" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3>Monthly Outgoings</h3>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label htmlFor="monthly_rent_or_mortgage">Monthly Rent/Mortgage (GBP)</label>
+                    <input id="monthly_rent_or_mortgage" name="monthly_rent_or_mortgage" type="number" min="0" step="50" />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="monthly_credit_commitments">Monthly Credit Commitments (GBP)</label>
+                    <input id="monthly_credit_commitments" name="monthly_credit_commitments" type="number" min="0" step="50" />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="monthly_living_costs">Monthly Living Costs (GBP)</label>
+                    <input id="monthly_living_costs" name="monthly_living_costs" type="number" min="0" step="50" />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="number_of_dependants">Number of Dependants</label>
+                    <input id="number_of_dependants" name="number_of_dependants" type="number" min="0" step="1" defaultValue="0" />
                   </div>
                 </div>
               </div>

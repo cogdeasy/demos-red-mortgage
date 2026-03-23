@@ -17,6 +17,10 @@ export interface Application {
   property_country: string | null;
   property_type: string | null;
   property_value: number | null;
+  monthly_rent_or_mortgage: number | null;
+  monthly_credit_commitments: number | null;
+  monthly_living_costs: number | null;
+  number_of_dependants: number | null;
   loan_amount: number;
   loan_term_months: number;
   loan_type: string;
@@ -36,6 +40,22 @@ export interface DashboardStats {
   by_status: Record<string, number>;
   avg_loan_amount: number;
   avg_ltv: number;
+  affordability_by_verdict: Record<string, number>;
+  avg_dti_ratio: number;
+}
+
+export interface AffordabilityCheck {
+  id: string;
+  application_id: string;
+  gross_monthly_income: number;
+  declared_monthly_outgoings: number;
+  mortgage_payment_current: number;
+  mortgage_payment_stressed: number;
+  dti_ratio_current: number;
+  dti_ratio_stressed: number;
+  verdict: string;
+  verdict_reason: string | null;
+  checked_at: string;
 }
 
 export interface AuditEvent {
@@ -89,5 +109,11 @@ export const api = {
       }),
     audit: (id: string) => fetchApi<{ data: AuditEvent[] }>(`/applications/${id}/audit`),
     stats: () => fetchApi<DashboardStats>('/applications/stats'),
+  },
+  affordability: {
+    run: (applicationId: string) =>
+      fetchApi<AffordabilityCheck>(`/applications/${applicationId}/affordability`, { method: 'POST' }),
+    get: (applicationId: string) =>
+      fetchApi<AffordabilityCheck>(`/applications/${applicationId}/affordability`),
   },
 };

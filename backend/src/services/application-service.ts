@@ -26,11 +26,13 @@ export class ApplicationService {
         applicant_employment_status, applicant_employer_name,
         property_address_line1, property_address_line2, property_city,
         property_postcode, property_country, property_type, property_value,
+        monthly_rent_or_mortgage, monthly_credit_commitments,
+        monthly_living_costs, number_of_dependants,
         loan_amount, loan_term_months, loan_type, interest_rate,
         ltv_ratio, monthly_payment, status, created_at, updated_at
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
-        $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25
+        $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29
       ) RETURNING *`,
       [
         id, data.applicant_first_name, data.applicant_last_name, data.applicant_email,
@@ -40,6 +42,8 @@ export class ApplicationService {
         data.property_address_line2 || null, data.property_city || null,
         data.property_postcode || null, data.property_country || 'United Kingdom',
         data.property_type || null, data.property_value || null,
+        data.monthly_rent_or_mortgage ?? null, data.monthly_credit_commitments ?? null,
+        data.monthly_living_costs ?? null, data.number_of_dependants ?? 0,
         data.loan_amount, data.loan_term_months, data.loan_type || 'fixed',
         interestRate, ltvRatio, monthlyPayment,
         ApplicationStatus.DRAFT, now, now,
@@ -147,6 +151,8 @@ export class ApplicationService {
       'property_address_line1', 'property_address_line2', 'property_city',
       'property_postcode', 'property_country', 'property_type', 'property_value',
       'loan_amount', 'loan_term_months', 'loan_type',
+      'monthly_rent_or_mortgage', 'monthly_credit_commitments',
+      'monthly_living_costs', 'number_of_dependants',
     ] as const;
 
     for (const field of updatableFields) {
@@ -263,6 +269,8 @@ export class ApplicationService {
     by_status: Record<string, number>;
     avg_loan_amount: number;
     avg_ltv: number;
+    affordability_by_verdict: Record<string, number>;
+    avg_dti_ratio: number;
   }> {
     const totalResult = await pool.query('SELECT COUNT(*) FROM applications');
     const statusResult = await pool.query(
@@ -271,10 +279,21 @@ export class ApplicationService {
     const avgResult = await pool.query(
       'SELECT AVG(loan_amount) as avg_loan, AVG(ltv_ratio) as avg_ltv FROM applications'
     );
+    const affordabilityVerdictResult = await pool.query(
+      'SELECT verdict, COUNT(*) as count FROM affordability_checks GROUP BY verdict'
+    );
+    const avgDtiResult = await pool.query(
+      'SELECT AVG(dti_ratio_current) as avg_dti FROM affordability_checks'
+    );
 
     const byStatus: Record<string, number> = {};
     for (const row of statusResult.rows) {
       byStatus[row.status] = parseInt(row.count, 10);
+    }
+
+    const affordabilityByVerdict: Record<string, number> = {};
+    for (const row of affordabilityVerdictResult.rows) {
+      affordabilityByVerdict[row.verdict] = parseInt(row.count, 10);
     }
 
     return {
@@ -282,6 +301,8 @@ export class ApplicationService {
       by_status: byStatus,
       avg_loan_amount: parseFloat(avgResult.rows[0].avg_loan) || 0,
       avg_ltv: parseFloat(avgResult.rows[0].avg_ltv) || 0,
+      affordability_by_verdict: affordabilityByVerdict,
+      avg_dti_ratio: parseFloat(avgDtiResult.rows[0].avg_dti) || 0,
     };
   }
 

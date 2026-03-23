@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { applicationService } from '../services/application-service';
+import { affordabilityService } from '../services/affordability-service';
 import { CreateApplicationSchema, UpdateApplicationSchema, SubmitApplicationSchema } from '../models/application';
 import { ZodError } from 'zod';
 import { ConflictError } from '../errors';
@@ -49,7 +50,8 @@ router.get('/:id', async (req: Request, res: Response) => {
       res.status(404).json({ error: 'Application not found' });
       return;
     }
-    res.json(application);
+    const affordabilityCheck = await affordabilityService.getAssessment(req.params.id);
+    res.json({ ...application, affordability_check: affordabilityCheck });
   } catch (error) {
     console.error('Error getting application:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -158,6 +160,41 @@ router.get('/:id/audit', async (req: Request, res: Response) => {
     res.json({ data: events });
   } catch (error) {
     console.error('Error getting audit trail:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/v1/applications/:id/affordability — Run affordability assessment
+router.post('/:id/affordability', async (req: Request, res: Response) => {
+  try {
+    const existing = await applicationService.getById(req.params.id);
+    if (!existing) {
+      res.status(404).json({ error: 'Application not found' });
+      return;
+    }
+    const result = await affordabilityService.runAssessment(req.params.id);
+    res.status(201).json(result);
+  } catch (error) {
+    if (error instanceof ConflictError) {
+      res.status(409).json({ error: error.message });
+      return;
+    }
+    console.error('Error running affordability assessment:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/v1/applications/:id/affordability — Get affordability assessment
+router.get('/:id/affordability', async (req: Request, res: Response) => {
+  try {
+    const result = await affordabilityService.getAssessment(req.params.id);
+    if (!result) {
+      res.status(404).json({ error: 'Affordability check not found' });
+      return;
+    }
+    res.json(result);
+  } catch (error) {
+    console.error('Error getting affordability assessment:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

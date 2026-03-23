@@ -28,6 +28,10 @@ export async function initDatabase(): Promise<void> {
         property_country VARCHAR(100) DEFAULT 'United Kingdom',
         property_type VARCHAR(50),
         property_value DECIMAL(15,2),
+        monthly_rent_or_mortgage DECIMAL(15,2),
+        monthly_credit_commitments DECIMAL(15,2),
+        monthly_living_costs DECIMAL(15,2),
+        number_of_dependants INTEGER DEFAULT 0,
         loan_amount DECIMAL(15,2) NOT NULL,
         loan_term_months INTEGER NOT NULL,
         loan_type VARCHAR(50) NOT NULL DEFAULT 'fixed',
@@ -96,7 +100,22 @@ export async function initDatabase(): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_notes_application_id ON notes(application_id);
       CREATE INDEX IF NOT EXISTS idx_audit_events_application_id ON audit_events(application_id);
       CREATE INDEX IF NOT EXISTS idx_audit_events_entity ON audit_events(entity_type, entity_id);
+      CREATE TABLE IF NOT EXISTS affordability_checks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        application_id UUID UNIQUE NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+        gross_monthly_income DECIMAL(15,2) NOT NULL,
+        declared_monthly_outgoings DECIMAL(15,2) NOT NULL,
+        mortgage_payment_current DECIMAL(15,2) NOT NULL,
+        mortgage_payment_stressed DECIMAL(15,2) NOT NULL,
+        dti_ratio_current DECIMAL(5,4) NOT NULL,
+        dti_ratio_stressed DECIMAL(5,4) NOT NULL,
+        verdict VARCHAR(20) NOT NULL,
+        verdict_reason TEXT,
+        checked_at TIMESTAMP DEFAULT NOW()
+      );
+
       CREATE UNIQUE INDEX IF NOT EXISTS idx_credit_checks_application_id ON credit_checks(application_id);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_affordability_checks_application_id ON affordability_checks(application_id);
     `);
     console.log('Database tables initialized');
   } finally {

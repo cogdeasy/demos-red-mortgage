@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { api, Application, AuditEvent } from '@/lib/api';
+import { api, Application, AuditEvent, AffordabilityCheck } from '@/lib/api';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -25,9 +25,11 @@ export default function ApplicationDetail() {
   const id = params.id as string;
   const [app, setApp] = useState<Application | null>(null);
   const [audit, setAudit] = useState<AuditEvent[]>([]);
+  const [affordability, setAffordability] = useState<AffordabilityCheck | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [affordabilityLoading, setAffordabilityLoading] = useState(false);
 
   async function load() {
     try {
@@ -37,6 +39,12 @@ export default function ApplicationDetail() {
       ]);
       setApp(appData);
       setAudit(auditData.data);
+      try {
+        const affData = await api.affordability.get(id);
+        setAffordability(affData);
+      } catch {
+        // No affordability check yet — that's fine
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load');
     } finally {
@@ -55,6 +63,19 @@ export default function ApplicationDetail() {
       alert(e instanceof Error ? e.message : 'Failed to submit');
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  async function handleRunAffordability() {
+    setAffordabilityLoading(true);
+    try {
+      const result = await api.affordability.run(id);
+      setAffordability(result);
+      await load();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to run affordability check');
+    } finally {
+      setAffordabilityLoading(false);
     }
   }
 
@@ -209,6 +230,84 @@ export default function ApplicationDetail() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-header"><h2>Affordability Assessment</h2></div>
+              <div className="card-body">
+                {affordability ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '4px',
+                        fontWeight: 600,
+                        fontSize: '0.85rem',
+                        color: '#fff',
+                        backgroundColor: affordability.verdict === 'pass' ? '#22c55e' : affordability.verdict === 'marginal' ? '#eab308' : '#ef4444',
+                      }}>
+                        {affordability.verdict.toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Gross Monthly Income</div>
+                      <div style={{ fontWeight: 600 }}>{formatCurrency(Number(affordability.gross_monthly_income))}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Total Monthly Outgoings</div>
+                      <div style={{ fontWeight: 600 }}>{formatCurrency(Number(affordability.declared_monthly_outgoings))}</div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                      <div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Current Payment</div>
+                        <div style={{ fontWeight: 600 }}>{formatCurrency(Number(affordability.mortgage_payment_current))}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Stressed Payment</div>
+                        <div style={{ fontWeight: 600 }}>{formatCurrency(Number(affordability.mortgage_payment_stressed))}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                      <div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>DTI (Current)</div>
+                        <div style={{ fontWeight: 600 }}>{formatPercent(Number(affordability.dti_ratio_current))}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>DTI (Stressed)</div>
+                        <div style={{ fontWeight: 600 }}>{formatPercent(Number(affordability.dti_ratio_stressed))}</div>
+                      </div>
+                    </div>
+                    {affordability.verdict_reason && (
+                      <div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reason</div>
+                        <p style={{ fontSize: '0.85rem', margin: '0.25rem 0 0' }}>{affordability.verdict_reason}</p>
+                      </div>
+                    )}
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      Checked: {formatDateTime(affordability.checked_at)}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                      Run an affordability assessment to evaluate the applicant&apos;s ability to meet repayments.
+                    </p>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleRunAffordability}
+                      disabled={affordabilityLoading || !app.applicant_annual_income}
+                    >
+                      {affordabilityLoading ? 'Running...' : 'Run Affordability Check'}
+                    </button>
+                    {!app.applicant_annual_income && (
+                      <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--danger)' }}>
+                        Income data is required to run the affordability check.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
