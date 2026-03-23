@@ -44,9 +44,9 @@ export default function Dashboard() {
     <>
       <header className="header">
         <div className="container header-content">
-          <a href="/" className="header-logo">
+          <Link href="/" className="header-logo">
             <Image src="/hsbc-logo.svg" alt="HSBC" width={120} height={32} priority />
-          </a>
+          </Link>
           <nav className="header-nav">
             <a href="/" className="active">Dashboard</a>
             <Link href="/applications/new">New Application</Link>
