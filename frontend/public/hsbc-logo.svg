@@ -1,19 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 40" fill="none">
-  <!-- HSBC Hexagon Logo -->
-  <g transform="translate(0, 0)">
-    <!-- Outer hexagon (red) -->
-    <polygon points="20,0 37.32,10 37.32,30 20,40 2.68,30 2.68,10" fill="#DB0011"/>
-    <!-- White cross/chevron pattern inside hexagon -->
-    <polygon points="20,2 35.32,11 35.32,29 20,38 4.68,29 4.68,11" fill="#DB0011"/>
-    <!-- Top-left white triangle -->
-    <polygon points="6,12 20,4 20,20" fill="#FFFFFF"/>
-    <!-- Top-right white triangle -->
-    <polygon points="34,12 20,4 20,20" fill="#FFFFFF"/>
-    <!-- Bottom-left white triangle -->
-    <polygon points="6,28 20,36 20,20" fill="#FFFFFF"/>
-    <!-- Bottom-right white triangle -->
-    <polygon points="34,28 20,36 20,20" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 44" fill="none">
+  <!--
+    HSBC Logo: The iconic flag/chevron mark.
+    It's a rectangle divided by diagonal lines into 6 triangular sections.
+    The top-center and bottom-center triangles are red.
+    The top-left and bottom-right triangles are red.
+    The top-right and bottom-left triangles are white (negative space).
+    This creates the appearance of two red chevrons/arrows pointing inward.
+  -->
+  <!-- HSBC flag mark scaled from official SVG (4 red triangles) -->
+  <g transform="scale(0.518)">
+    <polygon points="170.1,42.6 127.6,0 127.6,85.1" fill="#db0011"/>
+    <polygon points="85.1,42.6 127.6,0 42.6,0" fill="#db0011"/>
+    <polygon points="0,42.6 42.6,85.1 42.6,0" fill="#db0011"/>
+    <polygon points="85.1,42.6 42.6,85.1 127.6,85.1" fill="#db0011"/>
   </g>
   <!-- HSBC Text -->
-  <text x="48" y="28" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#000000" letter-spacing="1">HSBC</text>
+  <text x="100" y="33" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" fill="#000000" letter-spacing="2">HSBC</text>
 </svg>
