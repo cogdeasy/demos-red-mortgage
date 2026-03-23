@@ -22,9 +22,11 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql://mortgage:mortgage_dev@postgres:5432/mortgage
+      DATABASE_URL: jdbc:postgresql://postgres:5432/mortgage
+      DB_USERNAME: mortgage
+      DB_PASSWORD: mortgage_dev
       PORT: '3001'
-      NODE_ENV: development
+      SPRING_PROFILES_ACTIVE: seed
     ports:
       - '3001:3001'
     depends_on:
