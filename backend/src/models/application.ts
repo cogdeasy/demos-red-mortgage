@@ -44,6 +44,10 @@ export const CreateApplicationSchema = z.object({
   property_country: z.string().max(100).optional(),
   property_type: z.string().max(50).optional(),
   property_value: z.number().positive().optional(),
+  monthly_rent_or_mortgage: z.number().min(0).optional(),
+  monthly_credit_commitments: z.number().min(0).optional(),
+  monthly_living_costs: z.number().min(0).optional(),
+  number_of_dependants: z.number().int().min(0).optional(),
   loan_amount: z.number().positive(),
   loan_term_months: z.number().int().min(12).max(480),
   loan_type: z.string().max(50).optional(),
@@ -62,6 +66,10 @@ export const SubmitApplicationSchema = z.object({
   property_postcode: z.string().min(1).max(20),
   loan_amount: z.coerce.number().positive(),
   loan_term_months: z.coerce.number().int().min(12).max(480),
+  monthly_rent_or_mortgage: z.coerce.number().min(0),
+  monthly_credit_commitments: z.coerce.number().min(0),
+  monthly_living_costs: z.coerce.number().min(0),
+  number_of_dependants: z.coerce.number().int().min(0),
 });
 
 export interface Application {
@@ -81,6 +89,10 @@ export interface Application {
   property_country: string | null;
   property_type: string | null;
   property_value: number | null;
+  monthly_rent_or_mortgage: number | null;
+  monthly_credit_commitments: number | null;
+  monthly_living_costs: number | null;
+  number_of_dependants: number | null;
   loan_amount: number;
   loan_term_months: number;
   loan_type: string;
@@ -117,6 +129,20 @@ export interface Note {
   content: string;
   note_type: string;
   created_at: string;
+}
+
+export interface AffordabilityCheck {
+  id: string;
+  application_id: string;
+  gross_monthly_income: number;
+  declared_monthly_outgoings: number;
+  mortgage_payment_current: number;
+  mortgage_payment_stressed: number;
+  dti_ratio_current: number;
+  dti_ratio_stressed: number;
+  verdict: string;
+  verdict_reason: string | null;
+  checked_at: string;
 }
 
 export interface AuditEvent {
