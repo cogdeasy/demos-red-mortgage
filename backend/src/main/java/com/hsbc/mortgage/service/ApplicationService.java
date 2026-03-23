@@ -110,15 +110,18 @@ public class ApplicationService {
             throw new IllegalArgumentException("Invalid sort column: " + sortBy);
         }
 
-        String jpaSort = SORT_COLUMN_MAP.getOrDefault(sortBy, "createdAt");
+        String jpaSort = (sortBy != null) ? SORT_COLUMN_MAP.getOrDefault(sortBy, "createdAt") : "createdAt";
         Sort.Direction direction = "asc".equalsIgnoreCase(sortOrder) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize, Sort.by(direction, jpaSort));
 
+        // Use email as search term if provided (matches original Node.js behavior)
+        String effectiveSearch = search != null ? search : email;
+
         Page<Application> result;
-        if (status != null && search != null) {
-            result = applicationRepository.searchByStatus(status, search, pageable);
-        } else if (search != null) {
-            result = applicationRepository.searchApplications(search, pageable);
+        if (status != null && effectiveSearch != null) {
+            result = applicationRepository.searchByStatus(status, effectiveSearch, pageable);
+        } else if (effectiveSearch != null) {
+            result = applicationRepository.searchApplications(effectiveSearch, pageable);
         } else if (status != null) {
             result = applicationRepository.findByStatus(status, pageable);
         } else {
@@ -214,6 +217,7 @@ public class ApplicationService {
                     "Invalid decision. Must be: approved, conditionally_approved, or declined");
         }
 
+        String previousStatus = app.getStatus();
         app.setStatus(decision);
         app.setDecision(decision);
         app.setDecisionReason(reason);
@@ -224,7 +228,7 @@ public class ApplicationService {
 
         String changes = String.format(
                 "{\"status\":{\"from\":\"%s\",\"to\":\"%s\"},\"decision\":\"%s\",\"reason\":\"%s\"}",
-                app.getStatus(), decision, decision, reason.replace("\"", "\\\""));
+                previousStatus, decision, decision, reason.replace("\"", "\\\""));
         emitAuditEvent(id, "application", id,
                 "application." + decision, underwriter,
                 changes, "{\"source\":\"underwriter_portal\"}");
@@ -244,9 +248,10 @@ public class ApplicationService {
             byStatus.put((String) row[0], (Long) row[1]);
         }
 
-        Object[] avgs = applicationRepository.getAverages();
-        double avgLoan = avgs[0] != null ? ((BigDecimal) avgs[0]).doubleValue() : 0;
-        double avgLtv = avgs[1] != null ? ((BigDecimal) avgs[1]).doubleValue() : 0;
+        List<Object[]> avgsList = applicationRepository.getAverages();
+        Object[] avgs = (avgsList != null && !avgsList.isEmpty()) ? avgsList.get(0) : null;
+        double avgLoan = avgs != null && avgs[0] != null ? ((Number) avgs[0]).doubleValue() : 0;
+        double avgLtv = avgs != null && avgs[1] != null ? ((Number) avgs[1]).doubleValue() : 0;
 
         return new DashboardStats(total, byStatus, avgLoan, avgLtv);
     }

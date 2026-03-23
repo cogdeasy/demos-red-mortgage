@@ -33,5 +33,5 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     List<Object[]> countByStatusGrouped();
 
     @Query("SELECT AVG(a.loanAmount), AVG(a.ltvRatio) FROM Application a")
-    Object[] getAverages();
+    List<Object[]> getAverages();
 }

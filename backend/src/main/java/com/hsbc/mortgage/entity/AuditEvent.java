@@ -1,5 +1,7 @@
 package com.hsbc.mortgage.entity;
 
+import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -34,10 +36,12 @@ public class AuditEvent {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "changes", columnDefinition = "jsonb")
+    @JsonRawValue
     private String changes;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata", columnDefinition = "jsonb")
+    @JsonRawValue
     private String metadata;
 
     @Column(name = "created_at")
