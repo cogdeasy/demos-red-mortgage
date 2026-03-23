@@ -93,7 +93,7 @@ export class ApplicationService {
     }
     if (filters.search) {
       conditions.push(
-        `(applicant_first_name || ' ' || applicant_last_name ILIKE $${paramIndex}
+        `((applicant_first_name || ' ' || applicant_last_name) ILIKE $${paramIndex}
           OR applicant_email ILIKE $${paramIndex}
           OR COALESCE(property_postcode, '') ILIKE $${paramIndex}
           OR COALESCE(property_city, '') ILIKE $${paramIndex})`
@@ -102,15 +102,14 @@ export class ApplicationService {
       paramIndex++;
     }
 
-    // Validate sort column
+    if (filters.sort_by && !ApplicationService.VALID_SORT_COLUMNS.has(filters.sort_by)) {
+      throw new Error(`Invalid sort column: ${filters.sort_by}`);
+    }
+
     const sortBy = filters.sort_by && ApplicationService.VALID_SORT_COLUMNS.has(filters.sort_by)
       ? filters.sort_by
       : 'created_at';
     const sortOrder = filters.sort_order === 'asc' ? 'ASC' : 'DESC';
-
-    if (filters.sort_by && !ApplicationService.VALID_SORT_COLUMNS.has(filters.sort_by)) {
-      throw new Error(`Invalid sort column: ${filters.sort_by}`);
-    }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
