@@ -46,9 +46,13 @@ export default function NewApplication() {
 
   return (
     <>
+      <div className="top-accent" />
       <header className="header">
         <div className="container header-content">
-          <h1>Mortgage Origination Platform</h1>
+          <div className="header-logo">
+            <div className="logo-mark">▲</div>
+            <h1>HSBC Mortgage Services</h1>
+          </div>
           <nav className="header-nav">
             <Link href="/">Dashboard</Link>
             <a href="/applications/new" className="active">New Application</a>

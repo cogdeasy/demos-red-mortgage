@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Mortgage Origination Platform',
-  description: 'Full-stack mortgage application processing system',
+  title: 'HSBC Mortgage Services',
+  description: 'Mortgage origination and underwriting platform',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

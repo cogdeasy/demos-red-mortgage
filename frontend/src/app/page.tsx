@@ -41,9 +41,13 @@ export default function Dashboard() {
 
   return (
     <>
+      <div className="top-accent" />
       <header className="header">
         <div className="container header-content">
-          <h1>Mortgage Origination Platform</h1>
+          <div className="header-logo">
+            <div className="logo-mark">▲</div>
+            <h1>HSBC Mortgage Services</h1>
+          </div>
           <nav className="header-nav">
             <a href="/" className="active">Dashboard</a>
             <Link href="/applications/new">New Application</Link>
