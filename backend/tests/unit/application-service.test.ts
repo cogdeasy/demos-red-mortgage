@@ -137,6 +137,49 @@ describe('ApplicationService', () => {
         expect.arrayContaining(['submitted'])
       );
     });
+
+    it('should search by name/email/postcode', async () => {
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ count: '1' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [{ id: '1', applicant_first_name: 'Sarah' }], rowCount: 1 } as never);
+
+      const result = await service.list({ search: 'Sarah' });
+      expect(result.data).toHaveLength(1);
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('ILIKE'),
+        expect.arrayContaining(['%Sarah%'])
+      );
+    });
+
+    it('should sort by loan_amount ascending', async () => {
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ count: '2' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [{ id: '1' }, { id: '2' }], rowCount: 2 } as never);
+
+      const result = await service.list({ sort_by: 'loan_amount', sort_order: 'asc' });
+      expect(result.data).toHaveLength(2);
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('loan_amount ASC'),
+        expect.any(Array)
+      );
+    });
+
+    it('should reject invalid sort column', async () => {
+      await expect(service.list({ sort_by: 'invalid_column' })).rejects.toThrow('Invalid sort column');
+    });
+
+    it('should combine search and status filter', async () => {
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ count: '1' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [{ id: '1' }], rowCount: 1 } as never);
+
+      const result = await service.list({ search: 'London', status: 'approved' });
+      expect(result.data).toHaveLength(1);
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('status'),
+        expect.arrayContaining(['approved', '%London%'])
+      );
+    });
   });
 
   describe('submit', () => {

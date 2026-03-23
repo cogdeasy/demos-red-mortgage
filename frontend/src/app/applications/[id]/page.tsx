@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { api, Application, AuditEvent } from '@/lib/api';
 import Link from 'next/link';
+import Image from 'next/image';
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(amount);
@@ -76,13 +77,11 @@ export default function ApplicationDetail() {
 
   return (
     <>
-      <div className="top-accent" />
       <header className="header">
         <div className="container header-content">
-          <div className="header-logo">
-            <div className="logo-mark">▲</div>
-            <h1>HSBC Mortgage Services</h1>
-          </div>
+          <Link href="/" className="header-logo">
+            <Image src="/hsbc-logo.svg" alt="HSBC" width={120} height={32} priority />
+          </Link>
           <nav className="header-nav">
             <Link href="/">Dashboard</Link>
           </nav>

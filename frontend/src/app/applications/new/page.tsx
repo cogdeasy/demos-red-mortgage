@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function NewApplication() {
   const router = useRouter();
@@ -46,13 +47,11 @@ export default function NewApplication() {
 
   return (
     <>
-      <div className="top-accent" />
       <header className="header">
         <div className="container header-content">
-          <div className="header-logo">
-            <div className="logo-mark">▲</div>
-            <h1>HSBC Mortgage Services</h1>
-          </div>
+          <Link href="/" className="header-logo">
+            <Image src="/hsbc-logo.svg" alt="HSBC" width={120} height={32} priority />
+          </Link>
           <nav className="header-nav">
             <Link href="/">Dashboard</Link>
             <a href="/applications/new" className="active">New Application</a>
