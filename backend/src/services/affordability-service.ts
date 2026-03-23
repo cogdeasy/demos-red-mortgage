@@ -22,7 +22,7 @@ export class AffordabilityService {
       throw new Error(`Application not found: ${applicationId}`);
     }
 
-    const annualIncome = application.applicant_annual_income || 0;
+    const annualIncome = Number(application.applicant_annual_income) || 0;
     const grossMonthlyIncome = annualIncome / 12;
 
     const monthlyRentOrMortgage = Number(application.monthly_rent_or_mortgage) || 0;
@@ -30,8 +30,8 @@ export class AffordabilityService {
     const monthlyLivingCosts = Number(application.monthly_living_costs) || 0;
     const declaredMonthlyOutgoings = monthlyRentOrMortgage + monthlyCreditCommitments + monthlyLivingCosts;
 
-    const interestRate = application.interest_rate || 0.0425;
-    const loanAmount = application.loan_amount;
+    const interestRate = Number(application.interest_rate) || 0.0425;
+    const loanAmount = Number(application.loan_amount);
     const termMonths = application.loan_term_months;
 
     const mortgagePaymentCurrent = this.calculateMonthlyPayment(loanAmount, interestRate, termMonths);
