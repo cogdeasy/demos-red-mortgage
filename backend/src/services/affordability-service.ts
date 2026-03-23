@@ -41,8 +41,8 @@ export class AffordabilityService {
     let dtiCurrent = 0;
     let dtiStressed = 0;
     if (grossMonthlyIncome > 0) {
-      dtiCurrent = (declaredMonthlyOutgoings + mortgagePaymentCurrent) / grossMonthlyIncome;
-      dtiStressed = (declaredMonthlyOutgoings + mortgagePaymentStressed) / grossMonthlyIncome;
+      dtiCurrent = Math.min((declaredMonthlyOutgoings + mortgagePaymentCurrent) / grossMonthlyIncome, 9.9999);
+      dtiStressed = Math.min((declaredMonthlyOutgoings + mortgagePaymentStressed) / grossMonthlyIncome, 9.9999);
     } else {
       // Zero income means infinite DTI — automatic fail
       dtiCurrent = 9.9999;
