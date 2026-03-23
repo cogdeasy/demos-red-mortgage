@@ -57,7 +57,7 @@ export class CreditCheckService {
       ]
     );
 
-    await this.emitAuditEvent(request.application_id, riskBand, providerResponse.credit_score);
+    await this.emitAuditEvent(id, request.application_id, riskBand, providerResponse.credit_score);
 
     return result.rows[0];
   }
@@ -129,6 +129,7 @@ export class CreditCheckService {
   }
 
   private async emitAuditEvent(
+    creditCheckId: string,
     applicationId: string,
     riskBand: RiskBandType,
     creditScore: number
@@ -141,7 +142,7 @@ export class CreditCheckService {
         id,
         applicationId,
         'credit_check',
-        applicationId,
+        creditCheckId,
         'credit_check.completed',
         'system',
         JSON.stringify({ risk_band: riskBand, credit_score: creditScore }),
