@@ -40,7 +40,7 @@ export default function ApplicationDetail() {
       const [appData, auditData, notesData] = await Promise.all([
         api.applications.get(id),
         api.applications.audit(id),
-        api.notes.list(id),
+        api.notes.list(id, noteFilter || undefined),
       ]);
       setApp(appData);
       setAudit(auditData.data);

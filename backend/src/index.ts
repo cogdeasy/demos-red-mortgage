@@ -3,7 +3,7 @@ import cors from 'cors';
 import { initDatabase } from './config/database';
 import applicationRoutes from './routes/applications';
 import documentRoutes from './routes/documents';
-import noteRoutes from './routes/notes';
+import { noteApplicationRoutes, noteDirectRoutes } from './routes/notes';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -22,9 +22,9 @@ app.use('/api/v1/applications', applicationRoutes);
 app.use('/api/v1/applications', documentRoutes);
 // Document verification uses a different base path
 app.use('/api/v1/documents', documentRoutes);
-// Notes routes
-app.use('/api/v1/applications', noteRoutes);
-app.use('/api/v1/notes', noteRoutes);
+// Notes routes — split to avoid DELETE route collision with applications
+app.use('/api/v1/applications', noteApplicationRoutes);
+app.use('/api/v1/notes', noteDirectRoutes);
 
 // Start server
 async function start(): Promise<void> {
