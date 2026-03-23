@@ -289,6 +289,39 @@ async function seed() {
       );
     }
 
+    // Add sample notes for non-draft applications
+    if (app.status !== 'draft') {
+      const sampleNotes = [
+        { author: 'j.williams@hsbc.co.uk', content: 'Initial review completed. Income documentation verified.', note_type: 'general' },
+        { author: 'm.chen@hsbc.co.uk', content: 'LTV ratio is borderline. Requesting additional valuation.', note_type: 'condition' },
+        { author: 'j.williams@hsbc.co.uk', content: 'Applicant called to discuss terms. Prefers fixed rate.', note_type: 'follow_up' },
+      ];
+
+      // Add 1-3 notes depending on how far along the application is
+      const noteCount = ['submitted', 'under_review'].includes(app.status) ? 1
+        : ['conditionally_approved'].includes(app.status) ? 2 : 3;
+
+      for (let i = 0; i < noteCount; i++) {
+        const note = sampleNotes[i];
+        const noteId = uuidv4();
+        const noteCreatedAt = new Date(new Date(createdAt).getTime() + (i + 1) * 3 * 60 * 60 * 1000).toISOString();
+
+        await pool.query(
+          `INSERT INTO notes (id, application_id, author, content, note_type, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [noteId, id, note.author, note.content, note.note_type, noteCreatedAt]
+        );
+
+        await pool.query(
+          `INSERT INTO audit_events (id, application_id, entity_type, entity_id, action, actor, changes, metadata, created_at)
+           VALUES ($1, $2, 'note', $3, 'note.created', $4, $5, $6, $7)`,
+          [uuidv4(), id, noteId, note.author,
+           JSON.stringify({ content: note.content, note_type: note.note_type }),
+           JSON.stringify({ source: 'api' }), noteCreatedAt]
+        );
+      }
+    }
+
     console.log(`  Created: ${app.first_name} ${app.last_name} — ${app.status} — ${app.city} — £${app.loan_amount.toLocaleString()}`);
   }
 
