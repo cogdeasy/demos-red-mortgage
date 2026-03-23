@@ -247,7 +247,19 @@ describe('ApplicationService', () => {
         .mockResolvedValueOnce({
           rows: [{ avg_loan: '250000', avg_ltv: '0.75' }],
           rowCount: 1,
-        } as never); // averages
+        } as never) // averages
+        .mockResolvedValueOnce({
+          rows: [
+            { verdict: 'pass', count: '5' },
+            { verdict: 'marginal', count: '2' },
+            { verdict: 'fail', count: '1' },
+          ],
+          rowCount: 3,
+        } as never) // affordability by verdict
+        .mockResolvedValueOnce({
+          rows: [{ avg_dti: '0.42' }],
+          rowCount: 1,
+        } as never); // avg DTI
 
       const result = await service.getDashboardStats();
       expect(result.total).toBe(10);
@@ -255,6 +267,10 @@ describe('ApplicationService', () => {
       expect(result.by_status.submitted).toBe(4);
       expect(result.avg_loan_amount).toBe(250000);
       expect(result.avg_ltv).toBe(0.75);
+      expect(result.affordability_by_verdict.pass).toBe(5);
+      expect(result.affordability_by_verdict.marginal).toBe(2);
+      expect(result.affordability_by_verdict.fail).toBe(1);
+      expect(result.avg_dti_ratio).toBe(0.42);
     });
   });
 });
