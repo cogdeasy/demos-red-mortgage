@@ -7,53 +7,41 @@ on:
     branches: [main]
 
 jobs:
-  backend-lint:
-    name: Backend Lint
+  backend-build:
+    name: Backend Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-java@v4
         with:
-          node-version: '22'
-          cache: npm
-      - run: npm ci
-      - run: npm run lint -w backend
-
-  backend-typecheck:
-    name: Backend Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-      - run: npm ci
-      - run: npm run typecheck -w backend
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      - run: mvn -B compile -f backend/pom.xml
 
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-java@v4
         with:
-          node-version: '22'
-          cache: npm
-      - run: npm ci
-      - run: npm run test:unit -w backend
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      - run: mvn -B test -f backend/pom.xml
 
-  backend-build:
-    name: Backend Build
+  backend-package:
+    name: Backend Package
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-java@v4
         with:
-          node-version: '22'
-          cache: npm
-      - run: npm ci
-      - run: npm run build -w backend
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      - run: mvn -B package -DskipTests -f backend/pom.xml
 
   frontend-lint:
     name: Frontend Lint
@@ -64,8 +52,9 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
-      - run: npm run lint -w frontend
+          cache-dependency-path: frontend/package-lock.json
+      - run: cd frontend && npm ci
+      - run: cd frontend && npm run lint
 
   frontend-typecheck:
     name: Frontend Type Check
@@ -76,8 +65,9 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
-      - run: npm run typecheck -w frontend
+          cache-dependency-path: frontend/package-lock.json
+      - run: cd frontend && npm ci
+      - run: cd frontend && npm run typecheck
 
   frontend-build:
     name: Frontend Build
@@ -88,5 +78,6 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
-      - run: npm run build -w frontend
+          cache-dependency-path: frontend/package-lock.json
+      - run: cd frontend && npm ci
+      - run: cd frontend && npm run build
