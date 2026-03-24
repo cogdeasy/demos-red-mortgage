@@ -4,6 +4,7 @@ import com.hsbc.mortgage.dto.ApplicationListResponse;
 import com.hsbc.mortgage.dto.CreateApplicationRequest;
 import com.hsbc.mortgage.dto.DashboardStats;
 import com.hsbc.mortgage.dto.DecideRequest;
+import com.hsbc.mortgage.dto.ReviewRequest;
 import com.hsbc.mortgage.dto.UpdateApplicationRequest;
 import com.hsbc.mortgage.entity.Application;
 import com.hsbc.mortgage.entity.AuditEvent;
@@ -99,6 +100,27 @@ public class ApplicationController {
         }
         Application app = applicationService.decide(id, request.getDecision(),
                 request.getReason(), request.getUnderwriter());
+        if (app == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Application not found"));
+        }
+        return ResponseEntity.ok(app);
+    }
+
+    @PostMapping("/{id}/withdraw")
+    public ResponseEntity<Object> withdraw(@PathVariable UUID id) {
+        Application app = applicationService.withdraw(id);
+        if (app == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Application not found"));
+        }
+        return ResponseEntity.ok(app);
+    }
+
+    @PostMapping("/{id}/review")
+    public ResponseEntity<Object> startReview(@PathVariable UUID id,
+                                               @Valid @RequestBody ReviewRequest request) {
+        Application app = applicationService.startReview(id, request.getUnderwriter());
         if (app == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Application not found"));

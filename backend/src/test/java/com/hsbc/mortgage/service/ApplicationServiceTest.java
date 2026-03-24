@@ -182,6 +182,60 @@ class ApplicationServiceTest {
         assertEquals("application.created", result.get(0).getAction());
     }
 
+    @Test
+    void withdraw_shouldChangeStatusToWithdrawn() {
+        UUID id = UUID.randomUUID();
+        Application app = createTestApplication(id, "draft");
+
+        when(applicationRepository.findById(id)).thenReturn(Optional.of(app));
+        when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
+        when(auditEventRepository.save(any(AuditEvent.class))).thenAnswer(i -> i.getArgument(0));
+
+        Application result = service.withdraw(id);
+
+        assertEquals("withdrawn", result.getStatus());
+        verify(auditEventRepository).save(any(AuditEvent.class));
+    }
+
+    @Test
+    void withdraw_shouldThrowConflictIfApproved() {
+        UUID id = UUID.randomUUID();
+        Application app = createTestApplication(id, "approved");
+
+        when(applicationRepository.findById(id)).thenReturn(Optional.of(app));
+
+        ConflictException ex = assertThrows(ConflictException.class, () -> service.withdraw(id));
+        assertTrue(ex.getMessage().contains("Cannot withdraw application in status"));
+    }
+
+    @Test
+    void startReview_shouldChangeStatusToUnderReview() {
+        UUID id = UUID.randomUUID();
+        Application app = createTestApplication(id, "submitted");
+
+        when(applicationRepository.findById(id)).thenReturn(Optional.of(app));
+        when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
+        when(auditEventRepository.save(any(AuditEvent.class))).thenAnswer(i -> i.getArgument(0));
+
+        Application result = service.startReview(id, "underwriter@hsbc.co.uk");
+
+        assertEquals("under_review", result.getStatus());
+        assertEquals("underwriter@hsbc.co.uk", result.getAssignedUnderwriter());
+        verify(auditEventRepository).save(any(AuditEvent.class));
+    }
+
+    @Test
+    void startReview_shouldThrowConflictIfNotSubmitted() {
+        UUID id = UUID.randomUUID();
+        Application app = createTestApplication(id, "draft");
+
+        when(applicationRepository.findById(id)).thenReturn(Optional.of(app));
+
+        ConflictException ex = assertThrows(ConflictException.class,
+                () -> service.startReview(id, "underwriter@hsbc.co.uk"));
+        assertTrue(ex.getMessage().contains("Cannot start review for application in status"));
+    }
+
     private Application createTestApplication(UUID id, String status) {
         Application app = new Application();
         app.setId(id);
