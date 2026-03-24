@@ -5,6 +5,7 @@ import com.hsbc.mortgage.dto.UpdateApplicationRequest;
 import com.hsbc.mortgage.entity.Application;
 import com.hsbc.mortgage.entity.AuditEvent;
 import com.hsbc.mortgage.exception.ConflictException;
+import com.hsbc.mortgage.repository.AffordabilityCheckRepository;
 import com.hsbc.mortgage.repository.ApplicationRepository;
 import com.hsbc.mortgage.repository.AuditEventRepository;
 import java.math.BigDecimal;
@@ -33,11 +34,14 @@ class ApplicationServiceTest {
     @Mock
     private AuditEventRepository auditEventRepository;
 
+    @Mock
+    private AffordabilityCheckRepository affordabilityCheckRepository;
+
     private ApplicationService service;
 
     @BeforeEach
     void setUp() {
-        service = new ApplicationService(applicationRepository, auditEventRepository);
+        service = new ApplicationService(applicationRepository, auditEventRepository, affordabilityCheckRepository);
     }
 
     @Test

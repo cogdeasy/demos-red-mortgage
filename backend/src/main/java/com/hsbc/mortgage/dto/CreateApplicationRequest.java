@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 
@@ -64,6 +65,18 @@ public class CreateApplicationRequest {
     @Size(max = 50)
     private String loanType;
 
+    @PositiveOrZero
+    private BigDecimal monthlyRentOrMortgage;
+
+    @PositiveOrZero
+    private BigDecimal monthlyCreditCommitments;
+
+    @PositiveOrZero
+    private BigDecimal monthlyLivingCosts;
+
+    @Min(0)
+    private Integer numberOfDependants;
+
     public String getApplicantFirstName() { return applicantFirstName; }
     public void setApplicantFirstName(String v) { this.applicantFirstName = v; }
 
@@ -117,4 +130,16 @@ public class CreateApplicationRequest {
 
     public String getLoanType() { return loanType; }
     public void setLoanType(String v) { this.loanType = v; }
+
+    public BigDecimal getMonthlyRentOrMortgage() { return monthlyRentOrMortgage; }
+    public void setMonthlyRentOrMortgage(BigDecimal v) { this.monthlyRentOrMortgage = v; }
+
+    public BigDecimal getMonthlyCreditCommitments() { return monthlyCreditCommitments; }
+    public void setMonthlyCreditCommitments(BigDecimal v) { this.monthlyCreditCommitments = v; }
+
+    public BigDecimal getMonthlyLivingCosts() { return monthlyLivingCosts; }
+    public void setMonthlyLivingCosts(BigDecimal v) { this.monthlyLivingCosts = v; }
+
+    public Integer getNumberOfDependants() { return numberOfDependants; }
+    public void setNumberOfDependants(Integer v) { this.numberOfDependants = v; }
 }

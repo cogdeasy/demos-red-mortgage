@@ -5,8 +5,10 @@ import com.hsbc.mortgage.dto.CreateApplicationRequest;
 import com.hsbc.mortgage.dto.DashboardStats;
 import com.hsbc.mortgage.dto.DecideRequest;
 import com.hsbc.mortgage.dto.UpdateApplicationRequest;
+import com.hsbc.mortgage.entity.AffordabilityCheck;
 import com.hsbc.mortgage.entity.Application;
 import com.hsbc.mortgage.entity.AuditEvent;
+import com.hsbc.mortgage.service.AffordabilityService;
 import com.hsbc.mortgage.service.ApplicationService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -28,9 +30,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApplicationController {
 
     private final ApplicationService applicationService;
+    private final AffordabilityService affordabilityService;
 
-    public ApplicationController(ApplicationService applicationService) {
+    public ApplicationController(ApplicationService applicationService,
+                                 AffordabilityService affordabilityService) {
         this.applicationService = applicationService;
+        this.affordabilityService = affordabilityService;
     }
 
     @GetMapping
@@ -104,6 +109,20 @@ public class ApplicationController {
                     .body(Map.of("error", "Application not found"));
         }
         return ResponseEntity.ok(app);
+    }
+
+    @PostMapping("/{id}/affordability")
+    public ResponseEntity<AffordabilityCheck> runAffordability(@PathVariable UUID id) {
+        AffordabilityCheck result = affordabilityService.runAssessment(id);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
+    @GetMapping("/{id}/affordability")
+    public ResponseEntity<Object> getAffordability(@PathVariable UUID id) {
+        return affordabilityService.getAssessment(id)
+                .<ResponseEntity<Object>>map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Affordability check not found")));
     }
 
     @GetMapping("/{id}/audit")
