@@ -67,7 +67,7 @@ public class CreditCheckService {
 
         CreditCheck saved;
         try {
-            saved = creditCheckRepository.save(check);
+            saved = creditCheckRepository.saveAndFlush(check);
         } catch (DataIntegrityViolationException e) {
             throw new ConflictException("Credit check already exists for application " + applicationId);
         }
