@@ -37,6 +37,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        API_URL: http://backend:3001
     environment:
       NEXT_PUBLIC_API_URL: http://backend:3001
       API_URL: http://backend:3001
