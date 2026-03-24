@@ -49,7 +49,7 @@ public class NoteService {
         event.setEntityId(id);
         event.setAction("note.created");
         event.setActor(request.getAuthor());
-        event.setChanges(String.format("{\"note_type\":\"%s\"}", note.getNoteType()));
+        event.setChanges(String.format("{\"note_type\":\"%s\"}", note.getNoteType().replace("\\", "\\\\").replace("\"", "\\\"")));
         event.setMetadata("{\"source\":\"api\"}");
         event.setCreatedAt(now);
         auditEventRepository.save(event);
