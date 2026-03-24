@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mortgage Origination Platform — Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #ffffff;
+    --bg-alt: #f8f9fb;
+    --bg-card: #ffffff;
+    --text: #1a1a2e;
+    --text-muted: #6b7280;
+    --text-light: #9ca3af;
+    --accent: #db0011;
+    --accent-light: #fee2e2;
+    --border: #e5e7eb;
+    --border-light: #f3f4f6;
+    --green: #059669;
+    --green-light: #d1fae5;
+    --blue: #2563eb;
+    --blue-light: #dbeafe;
+    --amber: #d97706;
+    --amber-light: #fef3c7;
+    --purple: #7c3aed;
+    --purple-light: #ede9fe;
+    --cyan: #0891b2;
+    --cyan-light: #cffafe;
+    --slate: #475569;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* ── Cover ── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cover-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+  }
+
+  .cover h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+  }
+
+  .cover-subtitle {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    max-width: 640px;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 2.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .cover-meta dt {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.15rem;
+  }
+
+  /* ── Sections ── */
+  .section {
+    padding: 5rem 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .section-number {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .section h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-lead {
+    font-size: 1rem;
+    color: var(--text-muted);
+    max-width: 680px;
+    margin-bottom: 3rem;
+  }
+
+  .section h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .section h3:first-of-type {
+    margin-top: 0;
+  }
+
+  /* ── Diagram Container ── */
+  .diagram-wrap {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2.5rem;
+    margin: 2rem 0;
+    overflow-x: auto;
+  }
+
+  .diagram-wrap svg {
+    display: block;
+    margin: 0 auto;
+  }
+
+  .diagram-caption {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-top: 1rem;
+    font-style: italic;
+  }
+
+  /* ── Cards Grid ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin: 2rem 0;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    transition: box-shadow 0.2s;
+  }
+
+  .card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  .card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+  }
+
+  .card h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+
+  .card p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ── Table ── */
+  .clean-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.85rem;
+  }
+
+  .clean-table th {
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .clean-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+  }
+
+  .clean-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .clean-table code {
+    font-size: 0.8rem;
+    background: var(--bg-alt);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  /* ── Tags ── */
+  .tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.2em 0.6em;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .tag-red { background: var(--accent-light); color: var(--accent); }
+  .tag-green { background: var(--green-light); color: var(--green); }
+  .tag-blue { background: var(--blue-light); color: var(--blue); }
+  .tag-amber { background: var(--amber-light); color: var(--amber); }
+  .tag-purple { background: var(--purple-light); color: var(--purple); }
+  .tag-cyan { background: var(--cyan-light); color: var(--cyan); }
+
+  /* ── Flow ── */
+  .flow-steps {
+    display: flex;
+    gap: 0;
+    margin: 2rem 0;
+    overflow-x: auto;
+  }
+
+  .flow-step {
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+    position: relative;
+    padding: 1rem 0.5rem;
+  }
+
+  .flow-step::after {
+    content: '';
+    position: absolute;
+    top: 2.2rem;
+    right: -1px;
+    width: calc(100%);
+    height: 2px;
+    background: var(--border);
+    z-index: 0;
+  }
+
+  .flow-step:last-child::after {
+    display: none;
+  }
+
+  .flow-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .flow-step h5 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+  }
+
+  .flow-step p {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Two Column ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin: 2rem 0;
+  }
+
+  @media (max-width: 768px) {
+    .two-col { grid-template-columns: 1fr; }
+    .cover h1 { font-size: 2.5rem; }
+  }
+
+  /* ── Comparison ── */
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin: 2rem 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .comparison-col {
+    padding: 2rem;
+  }
+
+  .comparison-col:first-child {
+    border-right: 1px solid var(--border);
+    background: var(--bg-alt);
+  }
+
+  .comparison-col h4 {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+
+  .comparison-col h4.current { color: var(--text-muted); }
+  .comparison-col h4.future { color: var(--accent); }
+
+  .comparison-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .comparison-item .bullet {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 0.45rem;
+  }
+
+  .bullet-grey { background: var(--text-light); }
+  .bullet-red { background: var(--accent); }
+
+  /* ── Callout ── */
+  .callout {
+    background: var(--bg-alt);
+    border-left: 3px solid var(--accent);
+    padding: 1.25rem 1.5rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1.5rem 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .callout strong {
+    color: var(--text);
+  }
+
+  /* ── Priority List ── */
+  .priority-list {
+    margin: 1.5rem 0;
+  }
+
+  .priority-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.85rem;
+  }
+
+  .priority-item:last-child {
+    border-bottom: none;
+  }
+
+  .priority-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.25em 0.5em;
+    border-radius: 4px;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  .p0 { background: #fee2e2; color: #dc2626; }
+  .p1 { background: #fef3c7; color: #d97706; }
+  .p2 { background: #dbeafe; color: #2563eb; }
+  .p3 { background: #f3f4f6; color: #6b7280; }
+
+  /* ── Footer ── */
+  .footer {
+    padding: 3rem 0;
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-light);
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ═══════════════════════════════════════ COVER ═══════════════════════════════════════ -->
+  <section class="cover">
+    <div class="cover-eyebrow">Mortgage Origination Platform &middot; Architecture Blueprint</div>
+    <h1>Architecture<br>Blueprint</h1>
+    <p class="cover-subtitle">
+      Current-state and future-state architecture for the HSBC Mortgage Origination Platform.
+      A full-stack system spanning applicant intake, underwriting, credit decisioning, and
+      document management&mdash;built on Spring Boot, Next.js, and PostgreSQL.
+    </p>
+    <dl class="cover-meta">
+      <div><dt>Status</dt><dd>Draft</dd></div>
+      <div><dt>Version</dt><dd>1.0</dd></div>
+      <div><dt>Platform</dt><dd>Java 17 &middot; Spring Boot 3.2 &middot; Next.js 14</dd></div>
+      <div><dt>Date</dt><dd>March 2026</dd></div>
+    </dl>
+  </section>
+
+  <!-- ═══════════════════════════════ 01 EXECUTIVE SUMMARY ═══════════════════════════════ -->
+  <section class="section">
+    <span class="section-number">01</span>
+    <h2>Executive Summary</h2>
+    <p class="section-lead">
+      The Mortgage Origination Platform processes residential mortgage applications through a
+      multi-stage workflow&mdash;from applicant intake and credit scoring through underwriter
+      decisioning and document verification. This document maps the current implementation and
+      charts a future-state architecture with authentication, event-driven processing, external
+      integrations, and enterprise-grade observability.
+    </p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon" style="background:var(--accent-light);color:var(--accent);">A</div>
+        <h4>Current State</h4>
+        <p>Monolithic three-tier architecture. Next.js SPA, Spring Boot REST API, PostgreSQL. Mock credit checks. No auth. Docker Compose deployment.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--blue-light);color:var(--blue);">B</div>
+        <h4>Future State</h4>
+        <p>Event-driven microservices. OAuth2/OIDC auth, real credit bureau integration, object storage, notification service, API gateway, and full observability.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--green-light);color:var(--green);">C</div>
+        <h4>Migration Path</h4>
+        <p>Incremental evolution. Auth and API gateway first, then extract services behind events. No big-bang rewrite&mdash;each step delivers standalone value.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ 02 CURRENT-STATE ARCHITECTURE ══════════════════════════ -->
+  <section class="section">
+    <span class="section-number">02</span>
+    <h2>Current-State Architecture</h2>
+    <p class="section-lead">
+      A three-tier monolithic application deployed via Docker Compose. The frontend communicates
+      with a single Spring Boot API backed by PostgreSQL. All processing is synchronous and
+      in-process.
+    </p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 920 520" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:920px;width:100%">
+        <!-- Background regions -->
+        <rect x="20" y="20" width="880" height="480" rx="12" fill="#f8f9fb" stroke="#e5e7eb" stroke-width="1"/>
+
+        <!-- Browser / User -->
+        <rect x="60" y="60" width="160" height="80" rx="8" fill="#fff" stroke="#e5e7eb" stroke-width="1.5"/>
+        <text x="140" y="92" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="600" fill="#6b7280">APPLICANT</text>
+        <text x="140" y="110" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1a1a2e">Web Browser</text>
+
+        <!-- Underwriter -->
+        <rect x="60" y="180" width="160" height="80" rx="8" fill="#fff" stroke="#e5e7eb" stroke-width="1.5"/>
+        <text x="140" y="212" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="600" fill="#6b7280">UNDERWRITER</text>
+        <text x="140" y="230" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#1a1a2e">Web Browser</text>
+
+        <!-- Arrow: Users -> Frontend -->
+        <line x1="220" y1="100" x2="300" y2="100" stroke="#d1d5db" stroke-width="1.5" marker-end="url(#arrow-grey)"/>
+        <line x1="220" y1="220" x2="300" y2="220" stroke="#d1d5db" stroke-width="1.5" marker-end="url(#arrow-grey)"/>
+
+        <!-- Frontend -->
+        <rect x="300" y="55" width="220" height="200" rx="10" fill="#fff" stroke="#db0011" stroke-width="1.5"/>
+        <rect x="300" y="55" width="220" height="32" rx="10" fill="#db0011"/>
+        <rect x="300" y="75" width="220" height="12" fill="#db0011"/>
+        <text x="410" y="76" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#fff">FRONTEND</text>
+        <text x="410" y="110" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#6b7280">Next.js 14 &middot; React 18 &middot; TypeScript</text>
+
+        <text x="320" y="140" font-family="Inter,sans-serif" font-size="10" font-weight="500" fill="#1a1a2e">Dashboard (stats, list, search)</text>
+        <text x="320" y="158" font-family="Inter,sans-serif" font-size="10" font-weight="500" fill="#1a1a2e">Application Form (create)</text>
+        <text x="320" y="176" font-family="Inter,sans-serif" font-size="10" font-weight="500" fill="#1a1a2e">Application Detail (view, decide)</text>
+        <text x="320" y="194" font-family="Inter,sans-serif" font-size="10" font-weight="500" fill="#1a1a2e">Audit Trail viewer</text>
+
+        <text x="410" y="238" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#9ca3af">Port 3000</text>
+
+        <!-- Arrow: Frontend -> Backend -->
+        <line x1="520" y1="155" x2="580" y2="155" stroke="#db0011" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow-red)"/>
+        <text x="550" y="147" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#db0011">REST</text>
+
+        <!-- Backend -->
+        <rect x="580" y="40" width="280" height="290" rx="10" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+        <rect x="580" y="40" width="280" height="32" rx="10" fill="#2563eb"/>
+        <rect x="580" y="60" width="280" height="12" fill="#2563eb"/>
+        <text x="720" y="61" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#fff">BACKEND API</text>
+        <text x="720" y="92" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#6b7280">Java 17 &middot; Spring Boot 3.2 &middot; JPA</text>
+
+        <!-- Controllers -->
+        <rect x="600" y="110" width="240" height="28" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+        <text x="720" y="128" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#2563eb">Controllers: Application &middot; Document &middot; Health</text>
+
+        <!-- Services -->
+        <rect x="600" y="148" width="240" height="28" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+        <text x="720" y="166" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#2563eb">Services: Application &middot; CreditCheck &middot; Document</text>
+
+        <!-- Repositories -->
+        <rect x="600" y="186" width="240" height="28" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+        <text x="720" y="204" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#2563eb">Repositories: JPA / Spring Data</text>
+
+        <!-- Business Logic -->
+        <rect x="600" y="226" width="115" height="40" rx="5" fill="#f8f9fb" stroke="#e5e7eb" stroke-width="1"/>
+        <text x="657" y="244" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" font-weight="500" fill="#475569">LTV / Rate / Payment</text>
+        <text x="657" y="256" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" font-weight="500" fill="#475569">Calculation Engine</text>
+
+        <rect x="725" y="226" width="115" height="40" rx="5" fill="#f8f9fb" stroke="#e5e7eb" stroke-width="1"/>
+        <text x="782" y="244" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" font-weight="500" fill="#475569">Mock Credit Check</text>
+        <text x="782" y="256" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" font-weight="500" fill="#475569">(mock-experian)</text>
+
+        <rect x="600" y="276" width="240" height="28" rx="5" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+        <text x="720" y="294" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#92400e">Audit Event Emitter (in-process)</text>
+
+        <text x="720" y="320" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#9ca3af">Port 3001</text>
+
+        <!-- Arrow: Backend -> Database -->
+        <line x1="720" y1="330" x2="720" y2="380" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+        <text x="735" y="360" font-family="Inter,sans-serif" font-size="8" fill="#2563eb">JDBC</text>
+
+        <!-- Database -->
+        <rect x="580" y="380" width="280" height="100" rx="10" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+        <rect x="580" y="380" width="280" height="32" rx="10" fill="#059669"/>
+        <rect x="580" y="400" width="280" height="12" fill="#059669"/>
+        <text x="720" y="401" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="700" fill="#fff">POSTGRESQL 16</text>
+
+        <text x="600" y="434" font-family="Inter,sans-serif" font-size="9" font-weight="500" fill="#475569">applications</text>
+        <text x="600" y="448" font-family="Inter,sans-serif" font-size="9" font-weight="500" fill="#475569">credit_checks</text>
+        <text x="600" y="462" font-family="Inter,sans-serif" font-size="9" font-weight="500" fill="#475569">documents</text>
+        <text x="740" y="434" font-family="Inter,sans-serif" font-size="9" font-weight="500" fill="#475569">audit_events</text>
+        <text x="740" y="448" font-family="Inter,sans-serif" font-size="9" font-weight="500" fill="#475569">notes</text>
+
+        <!-- Docker label -->
+        <rect x="270" y="370" width="200" height="50" rx="8" fill="#f8f9fb" stroke="#d1d5db" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="370" y="395" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#6b7280">DOCKER COMPOSE</text>
+        <text x="370" y="410" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#9ca3af">3 services &middot; 1 volume</text>
+
+        <!-- CI/CD label -->
+        <rect x="60" y="370" width="180" height="50" rx="8" fill="#f8f9fb" stroke="#d1d5db" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="150" y="395" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#6b7280">GITHUB ACTIONS CI</text>
+        <text x="150" y="410" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#9ca3af">build &middot; test &middot; lint &middot; typecheck</text>
+
+        <!-- Markers -->
+        <defs>
+          <marker id="arrow-grey" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#d1d5db"/>
+          </marker>
+          <marker id="arrow-red" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#db0011"/>
+          </marker>
+          <marker id="arrow-blue" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/>
+          </marker>
+        </defs>
+      </svg>
+      <p class="diagram-caption">Figure 1 — Current-state system architecture. All components run as Docker containers orchestrated by Docker Compose.</p>
+    </div>
+
+    <h3>Component Inventory</h3>
+    <table class="clean-table">
+      <thead>
+        <tr>
+          <th>Layer</th>
+          <th>Technology</th>
+          <th>Responsibility</th>
+          <th>Port</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-red">Frontend</span></td>
+          <td>Next.js 14, React 18, TypeScript</td>
+          <td>Dashboard, application form, detail view, audit trail viewer</td>
+          <td><code>3000</code></td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-blue">Backend</span></td>
+          <td>Java 17, Spring Boot 3.2, Spring Data JPA</td>
+          <td>REST API, business logic, mock credit scoring, audit event emission</td>
+          <td><code>3001</code></td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-green">Database</span></td>
+          <td>PostgreSQL 16 Alpine</td>
+          <td>Persistent storage for applications, documents, credit checks, audit events, notes</td>
+          <td><code>5432</code></td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-amber">CI/CD</span></td>
+          <td>GitHub Actions (6 parallel jobs)</td>
+          <td>Backend build/test/package, frontend lint/typecheck/build</td>
+          <td>&mdash;</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Application Lifecycle</h3>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-dot">1</div>
+        <h5>Draft</h5>
+        <p>Application created with applicant, property, and loan details</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">2</div>
+        <h5>Submitted</h5>
+        <p>Validation passes, applicant submits for review</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">3</div>
+        <h5>Under Review</h5>
+        <p>Underwriter reviews application and credit data</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">4</div>
+        <h5>Decision</h5>
+        <p>Approved, conditionally approved, or declined</p>
+      </div>
+    </div>
+
+    <h3>API Surface</h3>
+    <table class="clean-table">
+      <thead>
+        <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>GET</code></td><td><code>/api/v1/applications</code></td><td>List with search, filter, sort, paginate</td></tr>
+        <tr><td><code>GET</code></td><td><code>/api/v1/applications/stats</code></td><td>Dashboard statistics</td></tr>
+        <tr><td><code>GET</code></td><td><code>/api/v1/applications/:id</code></td><td>Get application by ID</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/v1/applications</code></td><td>Create new application</td></tr>
+        <tr><td><code>PATCH</code></td><td><code>/api/v1/applications/:id</code></td><td>Update application</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/v1/applications/:id/submit</code></td><td>Submit for underwriter review</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/v1/applications/:id/decide</code></td><td>Record underwriter decision</td></tr>
+        <tr><td><code>GET</code></td><td><code>/api/v1/applications/:id/audit</code></td><td>Retrieve audit trail</td></tr>
+        <tr><td><code>GET</code></td><td><code>/api/v1/applications/:appId/documents</code></td><td>List documents</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/v1/applications/:appId/documents</code></td><td>Upload document metadata</td></tr>
+        <tr><td><code>PATCH</code></td><td><code>/api/v1/documents/:id/verify</code></td><td>Verify document</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Data Model</h3>
+    <table class="clean-table">
+      <thead>
+        <tr><th>Table</th><th>Key Fields</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>applications</code></td>
+          <td>applicant_*, property_*, loan_*, status, decision, ltv_ratio, interest_rate, monthly_payment</td>
+          <td>Core mortgage application record with calculated financial metrics</td>
+        </tr>
+        <tr>
+          <td><code>credit_checks</code></td>
+          <td>credit_score, risk_band, provider, request/response_payload (JSONB)</td>
+          <td>Mock credit bureau results, one per application</td>
+        </tr>
+        <tr>
+          <td><code>documents</code></td>
+          <td>document_type, file_name, storage_path, verified, verified_by</td>
+          <td>Document metadata with verification workflow</td>
+        </tr>
+        <tr>
+          <td><code>audit_events</code></td>
+          <td>entity_type, action, actor, changes (JSONB), metadata (JSONB)</td>
+          <td>Immutable audit log for every state transition</td>
+        </tr>
+        <tr>
+          <td><code>notes</code></td>
+          <td>author, content, note_type</td>
+          <td>Freeform notes attached to applications</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Current Limitations</h3>
+    <div class="cards-grid">
+      <div class="card">
+        <h4>No Authentication</h4>
+        <p>All endpoints are publicly accessible. No user identity, role-based access, or session management.</p>
+      </div>
+      <div class="card">
+        <h4>Mock Credit Scoring</h4>
+        <p>Credit checks use a deterministic algorithm. No integration with Experian, Equifax, or TransUnion.</p>
+      </div>
+      <div class="card">
+        <h4>No File Storage</h4>
+        <p>Document endpoints store metadata only. No actual file upload or object storage integration.</p>
+      </div>
+      <div class="card">
+        <h4>Synchronous Only</h4>
+        <p>All processing is synchronous. No event bus, queues, or async workflows.</p>
+      </div>
+      <div class="card">
+        <h4>No Notifications</h4>
+        <p>Status changes are not communicated. No email, SMS, or push notification capability.</p>
+      </div>
+      <div class="card">
+        <h4>No Observability</h4>
+        <p>No structured logging, metrics, tracing, or health dashboard beyond basic /health endpoint.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ 03 FUTURE-STATE ARCHITECTURE ═══════════════════════════ -->
+  <section class="section">
+    <span class="section-number">03</span>
+    <h2>Future-State Architecture</h2>
+    <p class="section-lead">
+      An event-driven, microservices-oriented platform with authentication, real integrations,
+      async processing, and enterprise observability. Each component is independently deployable
+      and horizontally scalable.
+    </p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 960 820" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:960px;width:100%">
+        <rect x="10" y="10" width="940" height="800" rx="12" fill="#f8f9fb" stroke="#e5e7eb" stroke-width="1"/>
+
+        <!-- ── Layer Labels ── -->
+        <text x="30" y="44" font-family="Inter,sans-serif" font-size="8" font-weight="700" letter-spacing="0.1em" fill="#9ca3af">CLIENTS</text>
+        <text x="30" y="174" font-family="Inter,sans-serif" font-size="8" font-weight="700" letter-spacing="0.1em" fill="#9ca3af">EDGE</text>
+        <text x="30" y="304" font-family="Inter,sans-serif" font-size="8" font-weight="700" letter-spacing="0.1em" fill="#9ca3af">APPLICATION SERVICES</text>
+        <text x="30" y="534" font-family="Inter,sans-serif" font-size="8" font-weight="700" letter-spacing="0.1em" fill="#9ca3af">EVENT BUS</text>
+        <text x="30" y="614" font-family="Inter,sans-serif" font-size="8" font-weight="700" letter-spacing="0.1em" fill="#9ca3af">DATA &amp; STORAGE</text>
+        <text x="30" y="744" font-family="Inter,sans-serif" font-size="8" font-weight="700" letter-spacing="0.1em" fill="#9ca3af">OBSERVABILITY</text>
+
+        <!-- ── Clients Row ── -->
+        <rect x="120" y="55" width="150" height="55" rx="8" fill="#fff" stroke="#e5e7eb" stroke-width="1.5"/>
+        <text x="195" y="78" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#1a1a2e">Applicant Portal</text>
+        <text x="195" y="94" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">Next.js 14 &middot; React 18</text>
+
+        <rect x="300" y="55" width="150" height="55" rx="8" fill="#fff" stroke="#e5e7eb" stroke-width="1.5"/>
+        <text x="375" y="78" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#1a1a2e">Underwriter Portal</text>
+        <text x="375" y="94" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">Next.js 14 &middot; React 18</text>
+
+        <rect x="480" y="55" width="150" height="55" rx="8" fill="#fff" stroke="#e5e7eb" stroke-width="1.5"/>
+        <text x="555" y="78" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#1a1a2e">Admin Dashboard</text>
+        <text x="555" y="94" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">Next.js 14 &middot; React 18</text>
+
+        <rect x="660" y="55" width="150" height="55" rx="8" fill="#fff" stroke="#e5e7eb" stroke-width="1.5"/>
+        <text x="735" y="78" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#1a1a2e">Mobile App</text>
+        <text x="735" y="94" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">React Native</text>
+
+        <!-- ── Edge Row: API Gateway + Auth ── -->
+        <rect x="120" y="150" width="410" height="65" rx="8" fill="#fff" stroke="#db0011" stroke-width="1.5"/>
+        <rect x="120" y="150" width="410" height="26" rx="8" fill="#db0011"/>
+        <rect x="120" y="168" width="410" height="8" fill="#db0011"/>
+        <text x="325" y="168" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#fff">API GATEWAY</text>
+        <text x="325" y="196" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#6b7280">Rate Limiting &middot; TLS Termination &middot; Request Routing &middot; CORS</text>
+
+        <rect x="560" y="150" width="250" height="65" rx="8" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+        <rect x="560" y="150" width="250" height="26" rx="8" fill="#7c3aed"/>
+        <rect x="560" y="168" width="250" height="8" fill="#7c3aed"/>
+        <text x="685" y="168" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#fff">IDENTITY PROVIDER</text>
+        <text x="685" y="196" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#6b7280">OAuth2 / OIDC &middot; RBAC &middot; MFA</text>
+
+        <!-- Arrows: Clients -> Gateway -->
+        <line x1="195" y1="110" x2="195" y2="150" stroke="#d1d5db" stroke-width="1" marker-end="url(#arrow-grey)"/>
+        <line x1="375" y1="110" x2="375" y2="150" stroke="#d1d5db" stroke-width="1" marker-end="url(#arrow-grey)"/>
+        <line x1="555" y1="110" x2="555" y2="150" stroke="#d1d5db" stroke-width="1" marker-end="url(#arrow-grey)"/>
+        <line x1="735" y1="110" x2="735" y2="150" stroke="#d1d5db" stroke-width="1" marker-end="url(#arrow-grey)"/>
+
+        <!-- Arrow: Gateway <-> IdP -->
+        <line x1="530" y1="182" x2="560" y2="182" stroke="#7c3aed" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arrow-purple)"/>
+
+        <!-- ── Application Services Row ── -->
+        <!-- Application Service -->
+        <rect x="60" y="260" width="165" height="100" rx="8" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+        <rect x="60" y="260" width="165" height="24" rx="8" fill="#2563eb"/>
+        <rect x="60" y="278" width="165" height="6" fill="#2563eb"/>
+        <text x="142" y="277" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff">APPLICATION SVC</text>
+        <text x="142" y="305" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">Spring Boot 3.2</text>
+        <text x="142" y="320" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">CRUD &middot; Lifecycle</text>
+        <text x="142" y="335" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Validation &middot; Calc Engine</text>
+
+        <!-- Credit Service -->
+        <rect x="245" y="260" width="165" height="100" rx="8" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+        <rect x="245" y="260" width="165" height="24" rx="8" fill="#2563eb"/>
+        <rect x="245" y="278" width="165" height="6" fill="#2563eb"/>
+        <text x="327" y="277" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff">CREDIT SERVICE</text>
+        <text x="327" y="305" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">Spring Boot 3.2</text>
+        <text x="327" y="320" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Experian &middot; Equifax</text>
+        <text x="327" y="335" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">TransUnion &middot; Risk Scoring</text>
+
+        <!-- Document Service -->
+        <rect x="430" y="260" width="165" height="100" rx="8" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+        <rect x="430" y="260" width="165" height="24" rx="8" fill="#2563eb"/>
+        <rect x="430" y="278" width="165" height="6" fill="#2563eb"/>
+        <text x="512" y="277" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff">DOCUMENT SVC</text>
+        <text x="512" y="305" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">Spring Boot 3.2</text>
+        <text x="512" y="320" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Upload &middot; OCR &middot; Verify</text>
+        <text x="512" y="335" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">S3 / Azure Blob</text>
+
+        <!-- Notification Service -->
+        <rect x="615" y="260" width="165" height="100" rx="8" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+        <rect x="615" y="260" width="165" height="24" rx="8" fill="#2563eb"/>
+        <rect x="615" y="278" width="165" height="6" fill="#2563eb"/>
+        <text x="697" y="277" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff">NOTIFICATION SVC</text>
+        <text x="697" y="305" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">Spring Boot 3.2</text>
+        <text x="697" y="320" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Email &middot; SMS &middot; Push</text>
+        <text x="697" y="335" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">SendGrid &middot; Twilio</text>
+
+        <!-- Workflow Service -->
+        <rect x="155" y="400" width="165" height="80" rx="8" fill="#fff" stroke="#0891b2" stroke-width="1.5"/>
+        <rect x="155" y="400" width="165" height="24" rx="8" fill="#0891b2"/>
+        <rect x="155" y="418" width="165" height="6" fill="#0891b2"/>
+        <text x="237" y="417" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff">WORKFLOW ENGINE</text>
+        <text x="237" y="445" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">State Machine &middot; Auto-assign</text>
+        <text x="237" y="460" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">SLA Tracking &middot; Escalation</text>
+
+        <!-- Compliance / Fraud Service -->
+        <rect x="340" y="400" width="165" height="80" rx="8" fill="#fff" stroke="#0891b2" stroke-width="1.5"/>
+        <rect x="340" y="400" width="165" height="24" rx="8" fill="#0891b2"/>
+        <rect x="340" y="418" width="165" height="6" fill="#0891b2"/>
+        <text x="422" y="417" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff">COMPLIANCE SVC</text>
+        <text x="422" y="445" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">AML / KYC Checks</text>
+        <text x="422" y="460" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Fraud Detection &middot; Sanctions</text>
+
+        <!-- Valuation Service -->
+        <rect x="525" y="400" width="165" height="80" rx="8" fill="#fff" stroke="#0891b2" stroke-width="1.5"/>
+        <rect x="525" y="400" width="165" height="24" rx="8" fill="#0891b2"/>
+        <rect x="525" y="418" width="165" height="6" fill="#0891b2"/>
+        <text x="607" y="417" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff">VALUATION SVC</text>
+        <text x="607" y="445" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Property Valuation API</text>
+        <text x="607" y="460" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">AVM &middot; Surveyor Integration</text>
+
+        <!-- Reporting Service -->
+        <rect x="710" y="400" width="165" height="80" rx="8" fill="#fff" stroke="#0891b2" stroke-width="1.5"/>
+        <rect x="710" y="400" width="165" height="24" rx="8" fill="#0891b2"/>
+        <rect x="710" y="418" width="165" height="6" fill="#0891b2"/>
+        <text x="792" y="417" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff">REPORTING SVC</text>
+        <text x="792" y="445" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Dashboards &middot; Analytics</text>
+        <text x="792" y="460" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Regulatory Reports</text>
+
+        <!-- Cache -->
+        <rect x="800" y="260" width="110" height="60" rx="8" fill="#fff" stroke="#d97706" stroke-width="1.5"/>
+        <text x="855" y="286" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#d97706">REDIS</text>
+        <text x="855" y="302" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">Cache &middot; Sessions</text>
+
+        <!-- Arrows: Gateway -> Services -->
+        <line x1="230" y1="215" x2="142" y2="260" stroke="#db0011" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="280" y1="215" x2="327" y2="260" stroke="#db0011" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="380" y1="215" x2="512" y2="260" stroke="#db0011" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="430" y1="215" x2="697" y2="260" stroke="#db0011" stroke-width="1" stroke-dasharray="3 2"/>
+
+        <!-- ── Event Bus ── -->
+        <rect x="60" y="520" width="850" height="45" rx="8" fill="#fff" stroke="#d97706" stroke-width="1.5"/>
+        <rect x="60" y="520" width="850" height="22" rx="8" fill="#d97706"/>
+        <rect x="60" y="536" width="850" height="6" fill="#d97706"/>
+        <text x="485" y="537" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="#fff">APACHE KAFKA &mdash; EVENT BUS</text>
+        <text x="485" y="556" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">application.created &middot; application.submitted &middot; credit.completed &middot; document.verified &middot; decision.made &middot; notification.requested</text>
+
+        <!-- Arrows: Services -> Kafka -->
+        <line x1="142" y1="360" x2="142" y2="520" stroke="#d97706" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="327" y1="360" x2="327" y2="520" stroke="#d97706" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="512" y1="360" x2="512" y2="520" stroke="#d97706" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="697" y1="360" x2="697" y2="520" stroke="#d97706" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="237" y1="480" x2="237" y2="520" stroke="#d97706" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="422" y1="480" x2="422" y2="520" stroke="#d97706" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="607" y1="480" x2="607" y2="520" stroke="#d97706" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="792" y1="480" x2="792" y2="520" stroke="#d97706" stroke-width="1" stroke-dasharray="3 2"/>
+
+        <!-- ── Data Row ── -->
+        <rect x="60" y="600" width="185" height="70" rx="8" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+        <rect x="60" y="600" width="185" height="22" rx="8" fill="#059669"/>
+        <rect x="60" y="616" width="185" height="6" fill="#059669"/>
+        <text x="152" y="617" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff">POSTGRESQL 16</text>
+        <text x="152" y="644" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Applications &middot; Audit Events</text>
+        <text x="152" y="658" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Credit Checks &middot; Notes</text>
+
+        <rect x="265" y="600" width="185" height="70" rx="8" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+        <rect x="265" y="600" width="185" height="22" rx="8" fill="#059669"/>
+        <rect x="265" y="616" width="185" height="6" fill="#059669"/>
+        <text x="357" y="617" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff">OBJECT STORAGE</text>
+        <text x="357" y="644" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">S3 / Azure Blob</text>
+        <text x="357" y="658" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Documents &middot; Scans &middot; Reports</text>
+
+        <rect x="470" y="600" width="185" height="70" rx="8" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+        <rect x="470" y="600" width="185" height="22" rx="8" fill="#059669"/>
+        <rect x="470" y="616" width="185" height="6" fill="#059669"/>
+        <text x="562" y="617" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff">ELASTICSEARCH</text>
+        <text x="562" y="644" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Full-text Search</text>
+        <text x="562" y="658" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Application Index &middot; Audit Log</text>
+
+        <rect x="675" y="600" width="185" height="70" rx="8" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+        <rect x="675" y="600" width="185" height="22" rx="8" fill="#059669"/>
+        <rect x="675" y="616" width="185" height="6" fill="#059669"/>
+        <text x="767" y="617" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#fff">DATA WAREHOUSE</text>
+        <text x="767" y="644" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">BigQuery / Snowflake</text>
+        <text x="767" y="658" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#475569">Analytics &middot; Regulatory</text>
+
+        <!-- Arrows: Kafka -> Data -->
+        <line x1="250" y1="565" x2="152" y2="600" stroke="#059669" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="400" y1="565" x2="357" y2="600" stroke="#059669" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="550" y1="565" x2="562" y2="600" stroke="#059669" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="700" y1="565" x2="767" y2="600" stroke="#059669" stroke-width="1" stroke-dasharray="3 2"/>
+
+        <!-- ── Observability Row ── -->
+        <rect x="60" y="720" width="260" height="60" rx="8" fill="#fff" stroke="#475569" stroke-width="1.5"/>
+        <text x="190" y="748" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#475569">PROMETHEUS + GRAFANA</text>
+        <text x="190" y="764" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">Metrics &middot; Dashboards &middot; Alerts</text>
+
+        <rect x="350" y="720" width="260" height="60" rx="8" fill="#fff" stroke="#475569" stroke-width="1.5"/>
+        <text x="480" y="748" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#475569">JAEGER / OPENTELEMETRY</text>
+        <text x="480" y="764" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">Distributed Tracing</text>
+
+        <rect x="640" y="720" width="260" height="60" rx="8" fill="#fff" stroke="#475569" stroke-width="1.5"/>
+        <text x="770" y="748" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#475569">ELK / LOKI</text>
+        <text x="770" y="764" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6b7280">Structured Logging &middot; Log Aggregation</text>
+
+        <defs>
+          <marker id="arrow-purple" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/>
+          </marker>
+        </defs>
+      </svg>
+      <p class="diagram-caption">Figure 2 — Future-state target architecture. Event-driven microservices with dedicated data stores, edge security, and full observability.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ 04 FUTURE-STATE: COMPONENT DETAIL ═════════════════════════ -->
+  <section class="section">
+    <span class="section-number">04</span>
+    <h2>Future-State Component Detail</h2>
+    <p class="section-lead">
+      Detailed breakdown of each new and enhanced component in the target architecture.
+    </p>
+
+    <table class="clean-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Status</th>
+          <th>Technology</th>
+          <th>Responsibility</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>API Gateway</strong></td>
+          <td><span class="tag tag-red">New</span></td>
+          <td>Kong / Spring Cloud Gateway</td>
+          <td>TLS termination, rate limiting, request routing, CORS, API versioning</td>
+        </tr>
+        <tr>
+          <td><strong>Identity Provider</strong></td>
+          <td><span class="tag tag-red">New</span></td>
+          <td>Keycloak / Auth0</td>
+          <td>OAuth2/OIDC, RBAC (applicant, underwriter, admin), MFA, session management</td>
+        </tr>
+        <tr>
+          <td><strong>Application Service</strong></td>
+          <td><span class="tag tag-blue">Enhanced</span></td>
+          <td>Spring Boot 3.2</td>
+          <td>Core CRUD, lifecycle management, financial calculations. Enhanced with event publishing and auth integration</td>
+        </tr>
+        <tr>
+          <td><strong>Credit Service</strong></td>
+          <td><span class="tag tag-red">New</span></td>
+          <td>Spring Boot 3.2</td>
+          <td>Real credit bureau integrations (Experian, Equifax, TransUnion). Multi-provider scoring with fallback</td>
+        </tr>
+        <tr>
+          <td><strong>Document Service</strong></td>
+          <td><span class="tag tag-blue">Enhanced</span></td>
+          <td>Spring Boot 3.2</td>
+          <td>File upload to S3/Azure Blob, OCR extraction, virus scanning, verification workflow</td>
+        </tr>
+        <tr>
+          <td><strong>Notification Service</strong></td>
+          <td><span class="tag tag-red">New</span></td>
+          <td>Spring Boot 3.2</td>
+          <td>Event-driven email/SMS/push. Templates for each lifecycle event. SendGrid + Twilio</td>
+        </tr>
+        <tr>
+          <td><strong>Workflow Engine</strong></td>
+          <td><span class="tag tag-red">New</span></td>
+          <td>Camunda / custom state machine</td>
+          <td>Orchestrates multi-step workflows, auto-assigns underwriters, tracks SLAs, escalation rules</td>
+        </tr>
+        <tr>
+          <td><strong>Compliance Service</strong></td>
+          <td><span class="tag tag-red">New</span></td>
+          <td>Spring Boot 3.2</td>
+          <td>AML/KYC checks, sanctions screening, fraud detection, regulatory rule enforcement</td>
+        </tr>
+        <tr>
+          <td><strong>Valuation Service</strong></td>
+          <td><span class="tag tag-red">New</span></td>
+          <td>Spring Boot 3.2</td>
+          <td>Automated Valuation Model (AVM), surveyor booking integration, property data enrichment</td>
+        </tr>
+        <tr>
+          <td><strong>Reporting Service</strong></td>
+          <td><span class="tag tag-red">New</span></td>
+          <td>Spring Boot 3.2</td>
+          <td>Real-time dashboards, portfolio analytics, FCA/PRA regulatory reporting</td>
+        </tr>
+        <tr>
+          <td><strong>Event Bus</strong></td>
+          <td><span class="tag tag-red">New</span></td>
+          <td>Apache Kafka</td>
+          <td>Async event backbone. Topics for each domain event. Enables loose coupling between services</td>
+        </tr>
+        <tr>
+          <td><strong>Redis Cache</strong></td>
+          <td><span class="tag tag-red">New</span></td>
+          <td>Redis 7</td>
+          <td>Session storage, API response caching, rate limiting counters</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══════════════════════════ 05 CURRENT → FUTURE COMPARISON ═════════════════════════ -->
+  <section class="section">
+    <span class="section-number">05</span>
+    <h2>Current &rarr; Future Comparison</h2>
+    <p class="section-lead">
+      Side-by-side view of architectural decisions moving from current to future state.
+    </p>
+
+    <div class="comparison">
+      <div class="comparison-col">
+        <h4 class="current">Current State</h4>
+        <div class="comparison-item"><span class="bullet bullet-grey"></span>No authentication or authorization</div>
+        <div class="comparison-item"><span class="bullet bullet-grey"></span>Monolithic Spring Boot backend</div>
+        <div class="comparison-item"><span class="bullet bullet-grey"></span>Synchronous request/response only</div>
+        <div class="comparison-item"><span class="bullet bullet-grey"></span>Mock credit scoring (deterministic)</div>
+        <div class="comparison-item"><span class="bullet bullet-grey"></span>Document metadata only (no file storage)</div>
+        <div class="comparison-item"><span class="bullet bullet-grey"></span>No notifications</div>
+        <div class="comparison-item"><span class="bullet bullet-grey"></span>Single PostgreSQL for all data</div>
+        <div class="comparison-item"><span class="bullet bullet-grey"></span>No caching layer</div>
+        <div class="comparison-item"><span class="bullet bullet-grey"></span>Basic /health endpoint only</div>
+        <div class="comparison-item"><span class="bullet bullet-grey"></span>Docker Compose local deployment</div>
+        <div class="comparison-item"><span class="bullet bullet-grey"></span>GitHub Actions CI (build/test/lint)</div>
+        <div class="comparison-item"><span class="bullet bullet-grey"></span>Manual underwriter assignment</div>
+      </div>
+      <div class="comparison-col">
+        <h4 class="future">Future State</h4>
+        <div class="comparison-item"><span class="bullet bullet-red"></span>OAuth2/OIDC with RBAC and MFA</div>
+        <div class="comparison-item"><span class="bullet bullet-red"></span>Microservices behind API gateway</div>
+        <div class="comparison-item"><span class="bullet bullet-red"></span>Event-driven via Apache Kafka</div>
+        <div class="comparison-item"><span class="bullet bullet-red"></span>Real bureau integration (Experian, Equifax, TransUnion)</div>
+        <div class="comparison-item"><span class="bullet bullet-red"></span>S3/Azure Blob with OCR and virus scanning</div>
+        <div class="comparison-item"><span class="bullet bullet-red"></span>Email, SMS, push via SendGrid + Twilio</div>
+        <div class="comparison-item"><span class="bullet bullet-red"></span>Polyglot persistence (PG + Elasticsearch + DW)</div>
+        <div class="comparison-item"><span class="bullet bullet-red"></span>Redis for sessions, caching, rate limiting</div>
+        <div class="comparison-item"><span class="bullet bullet-red"></span>Prometheus + Grafana + Jaeger + ELK</div>
+        <div class="comparison-item"><span class="bullet bullet-red"></span>Kubernetes with Helm charts, multi-env</div>
+        <div class="comparison-item"><span class="bullet bullet-red"></span>Full CI/CD with staging, canary deploys</div>
+        <div class="comparison-item"><span class="bullet bullet-red"></span>Workflow engine with auto-assign + SLA</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ 06 EVENT-DRIVEN WORKFLOW ═══════════════════════════ -->
+  <section class="section">
+    <span class="section-number">06</span>
+    <h2>Event-Driven Workflow</h2>
+    <p class="section-lead">
+      The future-state lifecycle is fully event-driven. Each state transition publishes a domain
+      event to Kafka, triggering downstream services asynchronously.
+    </p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 900 300" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:900px;width:100%">
+        <!-- Step 1 -->
+        <rect x="20" y="40" width="120" height="60" rx="8" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="80" y="65" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#2563eb">Application</text>
+        <text x="80" y="80" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#2563eb">Created</text>
+        <line x1="140" y1="70" x2="170" y2="70" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+
+        <!-- Event 1 -->
+        <rect x="170" y="50" width="100" height="40" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+        <text x="220" y="74" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" font-weight="600" fill="#92400e">app.created</text>
+
+        <line x1="270" y1="70" x2="300" y2="70" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+
+        <!-- Step 2: Compliance -->
+        <rect x="300" y="40" width="120" height="60" rx="8" fill="#fff" stroke="#0891b2" stroke-width="1.5"/>
+        <text x="360" y="65" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#0891b2">AML / KYC</text>
+        <text x="360" y="80" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#0891b2">Check</text>
+        <line x1="420" y1="70" x2="450" y2="70" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+
+        <!-- Event 2 -->
+        <rect x="450" y="50" width="100" height="40" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+        <text x="500" y="74" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" font-weight="600" fill="#92400e">kyc.cleared</text>
+
+        <line x1="550" y1="70" x2="580" y2="70" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+
+        <!-- Step 3: Credit -->
+        <rect x="580" y="40" width="120" height="60" rx="8" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="640" y="65" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#2563eb">Credit Bureau</text>
+        <text x="640" y="80" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#2563eb">Check</text>
+        <line x1="700" y1="70" x2="730" y2="70" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+
+        <!-- Event 3 -->
+        <rect x="730" y="50" width="100" height="40" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+        <text x="780" y="74" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" font-weight="600" fill="#92400e">credit.scored</text>
+
+        <!-- Row 2 -->
+        <line x1="780" y1="90" x2="780" y2="140" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+
+        <!-- Step 4: Valuation -->
+        <rect x="580" y="140" width="120" height="60" rx="8" fill="#fff" stroke="#0891b2" stroke-width="1.5"/>
+        <text x="640" y="165" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#0891b2">Property</text>
+        <text x="640" y="180" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#0891b2">Valuation</text>
+        <line x1="580" y1="170" x2="550" y2="170" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrow-amber-left)"/>
+
+        <!-- Event 4 -->
+        <rect x="450" y="150" width="100" height="40" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+        <text x="500" y="174" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" font-weight="600" fill="#92400e">valuation.done</text>
+        <line x1="450" y1="170" x2="420" y2="170" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrow-amber-left)"/>
+
+        <!-- Step 5: Underwriter -->
+        <rect x="300" y="140" width="120" height="60" rx="8" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="360" y="165" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#7c3aed">Underwriter</text>
+        <text x="360" y="180" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#7c3aed">Decision</text>
+        <line x1="300" y1="170" x2="270" y2="170" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrow-amber-left)"/>
+
+        <!-- Event 5 -->
+        <rect x="170" y="150" width="100" height="40" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+        <text x="220" y="174" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" font-weight="600" fill="#92400e">decision.made</text>
+        <line x1="170" y1="170" x2="140" y2="170" stroke="#d97706" stroke-width="1.5" marker-end="url(#arrow-amber-left)"/>
+
+        <!-- Step 6: Notify -->
+        <rect x="20" y="140" width="120" height="60" rx="8" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="80" y="165" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#2563eb">Notify</text>
+        <text x="80" y="180" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#2563eb">Applicant</text>
+
+        <!-- Kafka bar -->
+        <rect x="20" y="240" width="860" height="30" rx="6" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+        <text x="450" y="260" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#92400e">KAFKA EVENT BUS — all events published and consumed asynchronously</text>
+
+        <!-- Vertical connectors to Kafka -->
+        <line x1="80" y1="100" x2="80" y2="240" stroke="#fbbf24" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.4"/>
+        <line x1="360" y1="100" x2="360" y2="240" stroke="#fbbf24" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.4"/>
+        <line x1="640" y1="200" x2="640" y2="240" stroke="#fbbf24" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.4"/>
+        <line x1="80" y1="200" x2="80" y2="240" stroke="#fbbf24" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.4"/>
+
+        <defs>
+          <marker id="arrow-amber" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#d97706"/>
+          </marker>
+          <marker id="arrow-amber-left" viewBox="0 0 10 7" refX="0" refY="3.5" markerWidth="8" markerHeight="6" orient="auto">
+            <polygon points="10 0, 0 3.5, 10 7" fill="#d97706"/>
+          </marker>
+        </defs>
+      </svg>
+      <p class="diagram-caption">Figure 3 — Event-driven application processing pipeline. Each step publishes a domain event to Kafka, triggering the next stage.</p>
+    </div>
+
+    <h3>Domain Events</h3>
+    <table class="clean-table">
+      <thead>
+        <tr><th>Event</th><th>Producer</th><th>Consumers</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>application.created</code></td><td>Application Service</td><td>Compliance, Notification, Workflow</td></tr>
+        <tr><td><code>application.submitted</code></td><td>Application Service</td><td>Credit Service, Compliance, Notification</td></tr>
+        <tr><td><code>kyc.cleared</code></td><td>Compliance Service</td><td>Credit Service, Workflow</td></tr>
+        <tr><td><code>kyc.flagged</code></td><td>Compliance Service</td><td>Workflow, Notification</td></tr>
+        <tr><td><code>credit.scored</code></td><td>Credit Service</td><td>Application Service, Valuation, Workflow</td></tr>
+        <tr><td><code>valuation.completed</code></td><td>Valuation Service</td><td>Application Service, Workflow</td></tr>
+        <tr><td><code>document.verified</code></td><td>Document Service</td><td>Workflow, Notification</td></tr>
+        <tr><td><code>decision.made</code></td><td>Application Service</td><td>Notification, Reporting, Compliance</td></tr>
+        <tr><td><code>notification.requested</code></td><td>Workflow Engine</td><td>Notification Service</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══════════════════════════════ 07 SECURITY MODEL ═══════════════════════════════ -->
+  <section class="section">
+    <span class="section-number">07</span>
+    <h2>Security &amp; Access Control</h2>
+    <p class="section-lead">
+      Role-based access control with OAuth2/OIDC authentication, enforced at the API gateway
+      and propagated via JWT tokens to all downstream services.
+    </p>
+
+    <table class="clean-table">
+      <thead>
+        <tr><th>Role</th><th>Permissions</th><th>Portal Access</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Applicant</strong></td>
+          <td>Create, view, update, and submit own applications. Upload documents. View own audit trail.</td>
+          <td>Applicant Portal, Mobile App</td>
+        </tr>
+        <tr>
+          <td><strong>Underwriter</strong></td>
+          <td>View all submitted/under_review applications. Run credit checks. Make decisions. Add notes.</td>
+          <td>Underwriter Portal</td>
+        </tr>
+        <tr>
+          <td><strong>Admin</strong></td>
+          <td>Full access. User management. System configuration. Reporting. Audit log export.</td>
+          <td>Admin Dashboard</td>
+        </tr>
+        <tr>
+          <td><strong>System</strong></td>
+          <td>Service-to-service authentication via client credentials. Event bus producer/consumer.</td>
+          <td>&mdash;</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <strong>MFA Requirement:</strong> All underwriter and admin accounts require multi-factor authentication.
+      Applicant accounts require MFA for document upload and application submission.
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════ 08 DEPLOYMENT ═══════════════════════════════════ -->
+  <section class="section">
+    <span class="section-number">08</span>
+    <h2>Deployment &amp; Infrastructure</h2>
+    <p class="section-lead">
+      Migration from Docker Compose to Kubernetes with multi-environment support, automated
+      CI/CD, and infrastructure as code.
+    </p>
+
+    <div class="two-col">
+      <div>
+        <h3>Environments</h3>
+        <table class="clean-table">
+          <tbody>
+            <tr><td><span class="tag tag-green">Dev</span></td><td>Feature branch deployments, mock integrations</td></tr>
+            <tr><td><span class="tag tag-blue">Staging</span></td><td>Production mirror, real integrations (sandbox), performance testing</td></tr>
+            <tr><td><span class="tag tag-red">Production</span></td><td>Multi-AZ deployment, canary releases, auto-scaling</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3>Infrastructure</h3>
+        <table class="clean-table">
+          <tbody>
+            <tr><td><strong>Orchestration</strong></td><td>Kubernetes (EKS / AKS)</td></tr>
+            <tr><td><strong>IaC</strong></td><td>Terraform + Helm</td></tr>
+            <tr><td><strong>CI/CD</strong></td><td>GitHub Actions &rarr; ArgoCD</td></tr>
+            <tr><td><strong>Registry</strong></td><td>ECR / ACR</td></tr>
+            <tr><td><strong>DNS / CDN</strong></td><td>CloudFront / Azure Front Door</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ 09 IMPLEMENTATION ROADMAP ═══════════════════════════ -->
+  <section class="section">
+    <span class="section-number">09</span>
+    <h2>Implementation Roadmap</h2>
+    <p class="section-lead">
+      Prioritised delivery plan. Each phase is independently deployable and delivers standalone value.
+    </p>
+
+    <div class="priority-list">
+      <div class="priority-item">
+        <span class="priority-badge p0">P0</span>
+        <div>
+          <strong>Authentication &amp; API Gateway</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)">OAuth2/OIDC integration, RBAC enforcement, API gateway with TLS and rate limiting</div>
+        </div>
+      </div>
+      <div class="priority-item">
+        <span class="priority-badge p0">P0</span>
+        <div>
+          <strong>Real Credit Bureau Integration</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)">Extract credit service, integrate Experian/Equifax APIs with fallback and circuit breaker</div>
+        </div>
+      </div>
+      <div class="priority-item">
+        <span class="priority-badge p1">P1</span>
+        <div>
+          <strong>Document Storage &amp; OCR</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)">S3/Blob upload, virus scanning, OCR extraction for ID and payslip documents</div>
+        </div>
+      </div>
+      <div class="priority-item">
+        <span class="priority-badge p1">P1</span>
+        <div>
+          <strong>Event Bus &amp; Async Processing</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)">Kafka setup, domain event publishing, refactor audit events to async consumers</div>
+        </div>
+      </div>
+      <div class="priority-item">
+        <span class="priority-badge p1">P1</span>
+        <div>
+          <strong>Notification Service</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)">Email/SMS notifications for status changes, decision outcomes, document requests</div>
+        </div>
+      </div>
+      <div class="priority-item">
+        <span class="priority-badge p2">P2</span>
+        <div>
+          <strong>Workflow Engine</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)">Automated underwriter assignment, SLA tracking, escalation rules, multi-step workflows</div>
+        </div>
+      </div>
+      <div class="priority-item">
+        <span class="priority-badge p2">P2</span>
+        <div>
+          <strong>Compliance &amp; Fraud Detection</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)">AML/KYC checks, sanctions screening, fraud scoring, regulatory rule engine</div>
+        </div>
+      </div>
+      <div class="priority-item">
+        <span class="priority-badge p2">P2</span>
+        <div>
+          <strong>Property Valuation Integration</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)">AVM integration, surveyor booking, property data enrichment from Land Registry</div>
+        </div>
+      </div>
+      <div class="priority-item">
+        <span class="priority-badge p2">P2</span>
+        <div>
+          <strong>Observability Stack</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)">Prometheus + Grafana, OpenTelemetry tracing, structured logging with ELK/Loki</div>
+        </div>
+      </div>
+      <div class="priority-item">
+        <span class="priority-badge p3">P3</span>
+        <div>
+          <strong>Kubernetes Migration</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)">Helm charts, multi-env deployment, ArgoCD GitOps, canary releases</div>
+        </div>
+      </div>
+      <div class="priority-item">
+        <span class="priority-badge p3">P3</span>
+        <div>
+          <strong>Reporting &amp; Analytics</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)">Data warehouse integration, portfolio analytics dashboards, FCA/PRA reporting</div>
+        </div>
+      </div>
+      <div class="priority-item">
+        <span class="priority-badge p3">P3</span>
+        <div>
+          <strong>Mobile Application</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)">React Native app for applicant self-service, document capture, status tracking</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ FOOTER ═══════════════════════════════════════ -->
+  <footer class="footer">
+    MORTGAGE ORIGINATION PLATFORM &middot; ARCHITECTURE BLUEPRINT &middot; 2026
+  </footer>
+
+</div>
+
+</body>
+</html>
