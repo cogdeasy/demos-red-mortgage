@@ -79,6 +79,18 @@ public class Application {
     @Column(name = "monthly_payment", precision = 15, scale = 2)
     private BigDecimal monthlyPayment;
 
+    @Column(name = "monthly_rent_or_mortgage", precision = 15, scale = 2)
+    private BigDecimal monthlyRentOrMortgage;
+
+    @Column(name = "monthly_credit_commitments", precision = 15, scale = 2)
+    private BigDecimal monthlyCreditCommitments;
+
+    @Column(name = "monthly_living_costs", precision = 15, scale = 2)
+    private BigDecimal monthlyLivingCosts;
+
+    @Column(name = "number_of_dependants")
+    private Integer numberOfDependants = 0;
+
     @Column(name = "status", nullable = false, length = 50)
     private String status = "draft";
 
@@ -182,4 +194,16 @@ public class Application {
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public BigDecimal getMonthlyRentOrMortgage() { return monthlyRentOrMortgage; }
+    public void setMonthlyRentOrMortgage(BigDecimal monthlyRentOrMortgage) { this.monthlyRentOrMortgage = monthlyRentOrMortgage; }
+
+    public BigDecimal getMonthlyCreditCommitments() { return monthlyCreditCommitments; }
+    public void setMonthlyCreditCommitments(BigDecimal monthlyCreditCommitments) { this.monthlyCreditCommitments = monthlyCreditCommitments; }
+
+    public BigDecimal getMonthlyLivingCosts() { return monthlyLivingCosts; }
+    public void setMonthlyLivingCosts(BigDecimal monthlyLivingCosts) { this.monthlyLivingCosts = monthlyLivingCosts; }
+
+    public Integer getNumberOfDependants() { return numberOfDependants; }
+    public void setNumberOfDependants(Integer numberOfDependants) { this.numberOfDependants = numberOfDependants; }
 }

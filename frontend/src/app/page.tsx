@@ -139,6 +139,27 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {stats && (stats.affordability_by_verdict?.pass !== undefined || stats.affordability_by_verdict?.marginal !== undefined || stats.affordability_by_verdict?.fail !== undefined) && (
+          <div className="stats-grid" style={{ marginTop: '1rem' }}>
+            <div className="stat-card">
+              <h3>Affordability: Pass</h3>
+              <div className="value" style={{ color: '#22c55e' }}>{stats.affordability_by_verdict?.pass || 0}</div>
+            </div>
+            <div className="stat-card">
+              <h3>Affordability: Marginal</h3>
+              <div className="value" style={{ color: '#eab308' }}>{stats.affordability_by_verdict?.marginal || 0}</div>
+            </div>
+            <div className="stat-card">
+              <h3>Affordability: Fail</h3>
+              <div className="value" style={{ color: '#ef4444' }}>{stats.affordability_by_verdict?.fail || 0}</div>
+            </div>
+            <div className="stat-card">
+              <h3>Avg DTI Ratio</h3>
+              <div className="value">{stats.avg_dti_ratio ? `${(stats.avg_dti_ratio * 100).toFixed(1)}%` : '\u2014'}</div>
+            </div>
+          </div>
+        )}
+
         <div className="card">
           <div className="card-header">
             <h2>Recent Applications</h2>

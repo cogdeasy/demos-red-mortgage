@@ -7,6 +7,7 @@ import com.hsbc.mortgage.dto.UpdateApplicationRequest;
 import com.hsbc.mortgage.entity.Application;
 import com.hsbc.mortgage.entity.AuditEvent;
 import com.hsbc.mortgage.exception.ConflictException;
+import com.hsbc.mortgage.repository.AffordabilityCheckRepository;
 import com.hsbc.mortgage.repository.ApplicationRepository;
 import com.hsbc.mortgage.repository.AuditEventRepository;
 import java.math.BigDecimal;
@@ -44,11 +45,14 @@ public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final AuditEventRepository auditEventRepository;
+    private final AffordabilityCheckRepository affordabilityCheckRepository;
 
     public ApplicationService(ApplicationRepository applicationRepository,
-                              AuditEventRepository auditEventRepository) {
+                              AuditEventRepository auditEventRepository,
+                              AffordabilityCheckRepository affordabilityCheckRepository) {
         this.applicationRepository = applicationRepository;
         this.auditEventRepository = auditEventRepository;
+        this.affordabilityCheckRepository = affordabilityCheckRepository;
     }
 
     @Transactional
@@ -73,6 +77,10 @@ public class ApplicationService {
         app.setLoanAmount(request.getLoanAmount());
         app.setLoanTermMonths(request.getLoanTermMonths());
         app.setLoanType(request.getLoanType() != null ? request.getLoanType() : "fixed");
+        app.setMonthlyRentOrMortgage(request.getMonthlyRentOrMortgage());
+        app.setMonthlyCreditCommitments(request.getMonthlyCreditCommitments());
+        app.setMonthlyLivingCosts(request.getMonthlyLivingCosts());
+        app.setNumberOfDependants(request.getNumberOfDependants() != null ? request.getNumberOfDependants() : 0);
         app.setStatus("draft");
 
         BigDecimal ltvRatio = calculateLtvRatio(app.getPropertyValue(), app.getLoanAmount());
@@ -154,6 +162,10 @@ public class ApplicationService {
         if (request.getLoanAmount() != null) app.setLoanAmount(request.getLoanAmount());
         if (request.getLoanTermMonths() != null) app.setLoanTermMonths(request.getLoanTermMonths());
         if (request.getLoanType() != null) app.setLoanType(request.getLoanType());
+        if (request.getMonthlyRentOrMortgage() != null) app.setMonthlyRentOrMortgage(request.getMonthlyRentOrMortgage());
+        if (request.getMonthlyCreditCommitments() != null) app.setMonthlyCreditCommitments(request.getMonthlyCreditCommitments());
+        if (request.getMonthlyLivingCosts() != null) app.setMonthlyLivingCosts(request.getMonthlyLivingCosts());
+        if (request.getNumberOfDependants() != null) app.setNumberOfDependants(request.getNumberOfDependants());
 
         BigDecimal ltvRatio = calculateLtvRatio(app.getPropertyValue(), app.getLoanAmount());
         BigDecimal interestRate = calculateInterestRate(ltvRatio, app.getLoanType());
@@ -253,7 +265,15 @@ public class ApplicationService {
         double avgLoan = avgs != null && avgs[0] != null ? ((Number) avgs[0]).doubleValue() : 0;
         double avgLtv = avgs != null && avgs[1] != null ? ((Number) avgs[1]).doubleValue() : 0;
 
-        return new DashboardStats(total, byStatus, avgLoan, avgLtv);
+        Map<String, Long> affordabilityByVerdict = new HashMap<>();
+        for (Object[] row : affordabilityCheckRepository.countByVerdictGrouped()) {
+            affordabilityByVerdict.put((String) row[0], (Long) row[1]);
+        }
+
+        Double avgDti = affordabilityCheckRepository.getAverageDtiRatio();
+        double avgDtiRatio = avgDti != null ? avgDti : 0;
+
+        return new DashboardStats(total, byStatus, avgLoan, avgLtv, affordabilityByVerdict, avgDtiRatio);
     }
 
     private void emitAuditEvent(UUID applicationId, String entityType, UUID entityId,
