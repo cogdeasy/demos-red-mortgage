@@ -38,6 +38,15 @@ export interface DashboardStats {
   avg_ltv: number;
 }
 
+export interface Note {
+  id: string;
+  application_id: string;
+  author: string;
+  content: string;
+  note_type: string;
+  created_at: string;
+}
+
 export interface AuditEvent {
   id: string;
   application_id: string;
@@ -89,5 +98,18 @@ export const api = {
       }),
     audit: (id: string) => fetchApi<{ data: AuditEvent[] }>(`/applications/${id}/audit`),
     stats: () => fetchApi<DashboardStats>('/applications/stats'),
+  },
+  notes: {
+    list: (applicationId: string, noteType?: string) => {
+      const query = noteType ? `?note_type=${noteType}` : '';
+      return fetchApi<{ data: Note[] }>(`/applications/${applicationId}/notes${query}`);
+    },
+    create: (applicationId: string, data: { author: string; content: string; note_type: string }) =>
+      fetchApi<Note>(`/applications/${applicationId}/notes`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      fetchApi<{ message: string }>(`/notes/${id}`, { method: 'DELETE' }),
   },
 };

@@ -228,6 +228,41 @@ tr:hover { background: #fafafa; }
 }
 .list-loading-overlay p { color: var(--text-muted); font-size: 0.9rem; }
 
+/* Notes Timeline */
+.note-item {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.note-item:last-child { border-bottom: none; }
+.note-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+.note-content {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+.badge-general { background: #e3f2fd; color: #1565c0; }
+.badge-internal { background: #f3e5f5; color: #7b1fa2; }
+.badge-condition { background: #fff8e1; color: #f57f17; }
+.badge-follow_up { background: #e8f5e9; color: #2e7d32; }
+.notes-filter select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  background: white;
+  cursor: pointer;
+}
+.notes-filter select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .stats-grid { grid-template-columns: 1fr 1fr; }

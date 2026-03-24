@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { api, Application, AuditEvent } from '@/lib/api';
+import { api, Application, AuditEvent, Note } from '@/lib/api';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -28,6 +28,12 @@ export default function ApplicationDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [noteFilter, setNoteFilter] = useState('');
+  const [noteAuthor, setNoteAuthor] = useState('');
+  const [noteContent, setNoteContent] = useState('');
+  const [noteType, setNoteType] = useState('general');
+  const [noteSubmitting, setNoteSubmitting] = useState(false);
 
   async function load() {
     try {
@@ -41,6 +47,13 @@ export default function ApplicationDetail() {
       setError(e instanceof Error ? e.message : 'Failed to load');
     } finally {
       setLoading(false);
+    }
+    try {
+      const notesData = await api.notes.list(id, noteFilter || undefined);
+      setNotes(notesData.data);
+    } catch (e) {
+      // Notes load failure shouldn't block the page
+      console.error('Failed to load notes', e);
     }
   }
 
@@ -222,6 +235,120 @@ export default function ApplicationDetail() {
                     By: {app.assigned_underwriter}
                   </p>
                 </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Notes Section */}
+        <div className="card">
+          <div className="card-header">
+            <h2>Notes ({notes.length})</h2>
+            <div className="notes-filter">
+              <select
+                value={noteFilter}
+                onChange={(e) => {
+                  setNoteFilter(e.target.value);
+                  api.notes.list(id, e.target.value || undefined).then((res) => setNotes(res.data)).catch(() => alert('Failed to filter notes'));
+                }}
+              >
+                <option value="">All Types</option>
+                <option value="general">General</option>
+                <option value="internal">Internal</option>
+                <option value="condition">Condition</option>
+                <option value="follow_up">Follow Up</option>
+              </select>
+            </div>
+          </div>
+          <div className="card-body">
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#fafafa', borderRadius: '4px', border: '1px solid var(--border)' }}>
+              <h3 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.75rem' }}>Add Note</h3>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Author</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. j.williams@hsbc.co.uk"
+                    value={noteAuthor}
+                    onChange={(e) => setNoteAuthor(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Type</label>
+                  <select value={noteType} onChange={(e) => setNoteType(e.target.value)}>
+                    <option value="general">General</option>
+                    <option value="internal">Internal</option>
+                    <option value="condition">Condition</option>
+                    <option value="follow_up">Follow Up</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-group" style={{ marginTop: '0.75rem' }}>
+                <label>Content</label>
+                <textarea
+                  rows={3}
+                  placeholder="Enter note content..."
+                  value={noteContent}
+                  onChange={(e) => setNoteContent(e.target.value)}
+                />
+              </div>
+              <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  className="btn btn-primary btn-sm"
+                  disabled={noteSubmitting || !noteContent.trim() || !noteAuthor.trim()}
+                  onClick={async () => {
+                    setNoteSubmitting(true);
+                    try {
+                      await api.notes.create(id, { author: noteAuthor, content: noteContent, note_type: noteType });
+                      setNoteContent('');
+                      const res = await api.notes.list(id, noteFilter || undefined);
+                      setNotes(res.data);
+                      const auditRes = await api.applications.audit(id);
+                      setAudit(auditRes.data);
+                    } catch (e) {
+                      alert(e instanceof Error ? e.message : 'Failed to add note');
+                    } finally {
+                      setNoteSubmitting(false);
+                    }
+                  }}
+                >
+                  {noteSubmitting ? 'Adding...' : 'Add Note'}
+                </button>
+              </div>
+            </div>
+
+            {notes.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No notes yet</p>
+            ) : (
+              <div>
+                {notes.map((note) => (
+                  <div key={note.id} className="note-item">
+                    <div className="note-meta">
+                      <strong>{note.author}</strong>
+                      <span className={`badge badge-${note.note_type}`}>{note.note_type.replace(/_/g, ' ')}</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{formatDateTime(note.created_at)}</span>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        style={{ marginLeft: 'auto', color: 'var(--danger)', borderColor: 'var(--danger)', padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                        onClick={async () => {
+                          if (!confirm('Delete this note?')) return;
+                          try {
+                            await api.notes.delete(note.id);
+                            const res = await api.notes.list(id, noteFilter || undefined);
+                            setNotes(res.data);
+                            const auditRes = await api.applications.audit(id);
+                            setAudit(auditRes.data);
+                          } catch (e) {
+                            alert(e instanceof Error ? e.message : 'Failed to delete note');
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="note-content">{note.content}</div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
