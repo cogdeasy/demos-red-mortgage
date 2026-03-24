@@ -37,18 +37,23 @@ export default function ApplicationDetail() {
 
   async function load() {
     try {
-      const [appData, auditData, notesData] = await Promise.all([
+      const [appData, auditData] = await Promise.all([
         api.applications.get(id),
         api.applications.audit(id),
-        api.notes.list(id, noteFilter || undefined),
       ]);
       setApp(appData);
       setAudit(auditData.data);
-      setNotes(notesData.data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load');
     } finally {
       setLoading(false);
+    }
+    try {
+      const notesData = await api.notes.list(id, noteFilter || undefined);
+      setNotes(notesData.data);
+    } catch (e) {
+      // Notes load failure shouldn't block the page
+      console.error('Failed to load notes', e);
     }
   }
 
@@ -244,7 +249,7 @@ export default function ApplicationDetail() {
                 value={noteFilter}
                 onChange={(e) => {
                   setNoteFilter(e.target.value);
-                  api.notes.list(id, e.target.value || undefined).then((res) => setNotes(res.data));
+                  api.notes.list(id, e.target.value || undefined).then((res) => setNotes(res.data)).catch(() => alert('Failed to filter notes'));
                 }}
               >
                 <option value="">All Types</option>
