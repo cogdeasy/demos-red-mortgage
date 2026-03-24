@@ -50,6 +50,42 @@ export interface AuditEvent {
   created_at: string;
 }
 
+export interface Note {
+  id: string;
+  application_id: string;
+  author: string;
+  content: string;
+  note_type: string;
+  created_at: string;
+}
+
+export interface CreditCheck {
+  id: string;
+  application_id: string;
+  credit_score: number;
+  risk_band: string;
+  provider: string;
+  request_payload: string | null;
+  response_payload: string | null;
+  checked_at: string;
+  created_at: string;
+}
+
+export interface DocumentRecord {
+  id: string;
+  application_id: string;
+  document_type: string;
+  file_name: string;
+  file_size: number | null;
+  mime_type: string | null;
+  storage_path: string | null;
+  uploaded_by: string | null;
+  verified: boolean;
+  verified_by: string | null;
+  verified_at: string | null;
+  created_at: string;
+}
+
 async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { 'Content-Type': 'application/json' },
@@ -87,7 +123,33 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ decision, reason, underwriter }),
       }),
+    withdraw: (id: string) =>
+      fetchApi<Application>(`/applications/${id}/withdraw`, { method: 'POST' }),
+    startReview: (id: string, underwriter: string) =>
+      fetchApi<Application>(`/applications/${id}/review`, {
+        method: 'POST',
+        body: JSON.stringify({ underwriter }),
+      }),
     audit: (id: string) => fetchApi<{ data: AuditEvent[] }>(`/applications/${id}/audit`),
     stats: () => fetchApi<DashboardStats>('/applications/stats'),
+  },
+  notes: {
+    list: (applicationId: string) =>
+      fetchApi<{ data: Note[] }>(`/applications/${applicationId}/notes`),
+    create: (applicationId: string, data: { author: string; content: string; note_type?: string }) =>
+      fetchApi<Note>(`/applications/${applicationId}/notes`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+  creditCheck: {
+    get: (applicationId: string) =>
+      fetchApi<CreditCheck>(`/applications/${applicationId}/credit-check`),
+    trigger: (applicationId: string) =>
+      fetchApi<CreditCheck>(`/applications/${applicationId}/credit-check`, { method: 'POST' }),
+  },
+  documents: {
+    list: (applicationId: string) =>
+      fetchApi<{ data: DocumentRecord[] }>(`/applications/${applicationId}/documents`),
   },
 };

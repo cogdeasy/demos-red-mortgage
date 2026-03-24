@@ -21,6 +21,7 @@ const STATUS_OPTIONS = [
   { value: 'approved', label: 'Approved' },
   { value: 'conditionally_approved', label: 'Conditionally Approved' },
   { value: 'declined', label: 'Declined' },
+  { value: 'withdrawn', label: 'Withdrawn' },
 ];
 
 type SortColumn = 'created_at' | 'loan_amount' | 'ltv_ratio' | 'applicant_last_name';
@@ -37,10 +38,13 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('');
   const [sortBy, setSortBy] = useState<SortColumn>('created_at');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchApplications = useCallback(async (searchTerm: string, status: string, sort: SortColumn, order: SortOrder) => {
+  const fetchApplications = useCallback(async (searchTerm: string, status: string, sort: SortColumn, order: SortOrder, pageNum: number = 1) => {
     setListLoading(true);
     try {
       const appsData = await api.applications.list({
@@ -48,8 +52,12 @@ export default function Dashboard() {
         status: status || undefined,
         sort_by: sort,
         sort_order: order,
+        page: pageNum,
       });
       setApplications(appsData.data);
+      setTotalCount(appsData.total);
+      setTotalPages(Math.max(1, Math.ceil(appsData.total / appsData.limit)));
+      setPage(appsData.page);
     } catch (e) {
       console.error('Error fetching applications:', e);
     } finally {
@@ -62,10 +70,13 @@ export default function Dashboard() {
       try {
         const [statsData, appsData] = await Promise.all([
           api.applications.stats(),
-          api.applications.list({ sort_by: 'created_at', sort_order: 'desc' }),
+          api.applications.list({ sort_by: 'created_at', sort_order: 'desc', page: 1 }),
         ]);
         setStats(statsData);
         setApplications(appsData.data);
+        setTotalCount(appsData.total);
+        setTotalPages(Math.max(1, Math.ceil(appsData.total / appsData.limit)));
+        setPage(appsData.page);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
@@ -79,14 +90,14 @@ export default function Dashboard() {
     setSearch(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchApplications(value, statusFilter, sortBy, sortOrder);
+      fetchApplications(value, statusFilter, sortBy, sortOrder, 1);
     }, 300);
   };
 
   const handleStatusChange = (value: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setStatusFilter(value);
-    fetchApplications(search, value, sortBy, sortOrder);
+    fetchApplications(search, value, sortBy, sortOrder, 1);
   };
 
   const handleSort = (column: SortColumn) => {
@@ -94,7 +105,7 @@ export default function Dashboard() {
     const newOrder: SortOrder = sortBy === column && sortOrder === 'asc' ? 'desc' : 'asc';
     setSortBy(column);
     setSortOrder(newOrder);
-    fetchApplications(search, statusFilter, column, newOrder);
+    fetchApplications(search, statusFilter, column, newOrder, 1);
   };
 
   const sortIndicator = (column: SortColumn) => {
@@ -215,6 +226,29 @@ export default function Dashboard() {
                   ))}
                 </tbody>
               </table>
+            )}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', borderTop: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Showing page {page} of {totalPages} ({totalCount} total)
+                </span>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    className="btn btn-outline btn-sm"
+                    onClick={() => fetchApplications(search, statusFilter, sortBy, sortOrder, page - 1)}
+                    disabled={page <= 1 || listLoading}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    className="btn btn-outline btn-sm"
+                    onClick={() => fetchApplications(search, statusFilter, sortBy, sortOrder, page + 1)}
+                    disabled={page >= totalPages || listLoading}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

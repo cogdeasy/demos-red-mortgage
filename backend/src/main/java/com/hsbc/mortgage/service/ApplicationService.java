@@ -236,6 +236,50 @@ public class ApplicationService {
         return saved;
     }
 
+    @Transactional
+    public Application withdraw(UUID id) {
+        Application app = applicationRepository.findById(id).orElse(null);
+        if (app == null) return null;
+
+        if (!"draft".equals(app.getStatus()) && !"submitted".equals(app.getStatus())) {
+            throw new ConflictException("Cannot withdraw application in status: " + app.getStatus());
+        }
+
+        String previousStatus = app.getStatus();
+        app.setStatus("withdrawn");
+        app.setUpdatedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        Application saved = applicationRepository.save(app);
+
+        emitAuditEvent(id, "application", id,
+                "application.withdrawn", "applicant",
+                String.format("{\"status\":{\"from\":\"%s\",\"to\":\"withdrawn\"}}", previousStatus),
+                "{\"source\":\"api\"}");
+
+        return saved;
+    }
+
+    @Transactional
+    public Application startReview(UUID id, String underwriter) {
+        Application app = applicationRepository.findById(id).orElse(null);
+        if (app == null) return null;
+
+        if (!"submitted".equals(app.getStatus())) {
+            throw new ConflictException("Cannot start review for application in status: " + app.getStatus());
+        }
+
+        app.setStatus("under_review");
+        app.setAssignedUnderwriter(underwriter);
+        app.setUpdatedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        Application saved = applicationRepository.save(app);
+
+        emitAuditEvent(id, "application", id,
+                "application.under_review", underwriter,
+                "{\"status\":{\"from\":\"submitted\",\"to\":\"under_review\"}}",
+                "{\"source\":\"underwriter_portal\"}");
+
+        return saved;
+    }
+
     public List<AuditEvent> getAuditTrail(UUID applicationId) {
         return auditEventRepository.findByApplicationIdOrderByCreatedAtAsc(applicationId);
     }
