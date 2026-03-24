@@ -1,25 +1,15 @@
 {
   "name": "demos-red-mortgage",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Full-stack mortgage origination platform — Software Factory 2.0 demo",
-  "workspaces": [
-    "backend",
-    "frontend"
-  ],
+  "description": "Full-stack mortgage origination platform — Java/Spring Boot backend + Next.js frontend",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "npm run dev -w backend",
-    "dev:frontend": "npm run dev -w frontend",
-    "build": "npm run build -w backend && npm run build -w frontend",
-    "lint": "npm run lint -w backend && npm run lint -w frontend",
-    "typecheck": "npm run typecheck -w backend && npm run typecheck -w frontend",
-    "test": "npm run test -w backend",
-    "test:unit": "npm run test:unit -w backend",
-    "test:integration": "npm run test:integration -w backend",
-    "validate": "npm run lint && npm run typecheck && npm run test:unit"
-  },
-  "devDependencies": {
-    "concurrently": "^9.1.0"
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "lint:frontend": "cd frontend && npm run lint",
+    "typecheck:frontend": "cd frontend && npm run typecheck",
+    "build:backend": "cd backend && mvn -B package -DskipTests",
+    "test:backend": "cd backend && mvn -B test",
+    "validate": "npm run lint:frontend && npm run typecheck:frontend && npm run test:backend"
   }
 }
