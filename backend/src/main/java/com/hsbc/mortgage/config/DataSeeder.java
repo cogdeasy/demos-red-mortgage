@@ -2,8 +2,10 @@ package com.hsbc.mortgage.config;
 
 import com.hsbc.mortgage.entity.Application;
 import com.hsbc.mortgage.entity.AuditEvent;
+import com.hsbc.mortgage.entity.Note;
 import com.hsbc.mortgage.repository.ApplicationRepository;
 import com.hsbc.mortgage.repository.AuditEventRepository;
+import com.hsbc.mortgage.repository.NoteRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
@@ -19,7 +21,7 @@ public class DataSeeder {
 
     @Bean
     @Profile("seed")
-    public CommandLineRunner seedData(ApplicationRepository appRepo, AuditEventRepository auditRepo) {
+    public CommandLineRunner seedData(ApplicationRepository appRepo, AuditEventRepository auditRepo, NoteRepository noteRepo) {
         return args -> {
             if (appRepo.count() > 0) {
                 System.out.println("Database already seeded, skipping...");
@@ -135,7 +137,54 @@ public class DataSeeder {
                 }
             }
 
-            System.out.println("Seeded " + samples.length + " sample applications");
+            // Sample notes for non-draft applications
+            String[][] sampleNotes = {
+                {"Initial review completed. Income documentation verified.", "general", "j.williams@hsbc.co.uk"},
+                {"LTV ratio is borderline. Requesting additional valuation.", "condition", "m.chen@hsbc.co.uk"},
+                {"Applicant called to discuss terms. Prefers fixed rate.", "follow_up", "j.williams@hsbc.co.uk"},
+                {"Credit check returned satisfactory results.", "general", "m.chen@hsbc.co.uk"},
+                {"Employment verification pending from HR department.", "internal", "j.williams@hsbc.co.uk"},
+                {"Property survey scheduled for next week.", "follow_up", "m.chen@hsbc.co.uk"},
+            };
+
+            int noteIdx = 0;
+            int totalNotes = 0;
+            // Re-iterate to add notes — we need to re-query saved apps
+            for (Application savedApp : appRepo.findAll()) {
+                if ("draft".equals(savedApp.getStatus())) continue;
+                int notesCount = 1 + (noteIdx % 3); // 1, 2, or 3 notes per app
+                for (int n = 0; n < notesCount; n++) {
+                    String[] noteData = sampleNotes[(noteIdx + n) % sampleNotes.length];
+                    UUID noteId = UUID.randomUUID();
+                    OffsetDateTime noteTime = savedApp.getCreatedAt().plusHours(3 + n);
+
+                    Note note = new Note();
+                    note.setId(noteId);
+                    note.setApplicationId(savedApp.getId());
+                    note.setContent(noteData[0]);
+                    note.setNoteType(noteData[1]);
+                    note.setAuthor(noteData[2]);
+                    note.setCreatedAt(noteTime);
+                    noteRepo.save(note);
+
+                    AuditEvent noteAudit = new AuditEvent();
+                    noteAudit.setId(UUID.randomUUID());
+                    noteAudit.setApplicationId(savedApp.getId());
+                    noteAudit.setEntityType("note");
+                    noteAudit.setEntityId(noteId);
+                    noteAudit.setAction("note.created");
+                    noteAudit.setActor(noteData[2]);
+                    noteAudit.setChanges(String.format("{\"content\":\"%s\",\"note_type\":\"%s\"}",
+                            noteData[0].replace("\"", "\\\""), noteData[1]));
+                    noteAudit.setMetadata("{\"source\":\"seed\"}");
+                    noteAudit.setCreatedAt(noteTime);
+                    auditRepo.save(noteAudit);
+                    totalNotes++;
+                }
+                noteIdx++;
+            }
+
+            System.out.println("Seeded " + samples.length + " sample applications and " + totalNotes + " notes");
         };
     }
 
