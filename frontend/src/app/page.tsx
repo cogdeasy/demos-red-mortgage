@@ -21,6 +21,7 @@ const STATUS_OPTIONS = [
   { value: 'approved', label: 'Approved' },
   { value: 'conditionally_approved', label: 'Conditionally Approved' },
   { value: 'declined', label: 'Declined' },
+  { value: 'withdrawn', label: 'Withdrawn' },
 ];
 
 type SortColumn = 'created_at' | 'loan_amount' | 'ltv_ratio' | 'applicant_last_name';

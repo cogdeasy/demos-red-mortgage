@@ -47,9 +47,9 @@ public class CreditCheckController {
         }
 
         Application app = appOpt.get();
-        if (app.getApplicantAnnualIncome() == null || app.getPropertyValue() == null) {
+        if (app.getApplicantAnnualIncome() == null || app.getPropertyValue() == null || app.getLoanAmount() == null) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Application missing required fields for credit check: annual income and property value"));
+                    .body(Map.of("error", "Application missing required fields for credit check: annual income, loan amount, and property value"));
         }
 
         CreditCheck result = creditCheckService.runCheck(
