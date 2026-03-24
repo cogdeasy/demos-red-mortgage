@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,7 +65,12 @@ public class CreditCheckService {
         check.setCheckedAt(now);
         check.setCreatedAt(now);
 
-        CreditCheck saved = creditCheckRepository.save(check);
+        CreditCheck saved;
+        try {
+            saved = creditCheckRepository.saveAndFlush(check);
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictException("Credit check already exists for application " + applicationId);
+        }
 
         AuditEvent event = new AuditEvent();
         event.setId(UUID.randomUUID());

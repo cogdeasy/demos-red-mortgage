@@ -52,7 +52,7 @@ class CreditCheckServiceTest {
     void runCheck_shouldCreateCreditCheck() {
         UUID appId = UUID.randomUUID();
         when(creditCheckRepository.findByApplicationId(appId)).thenReturn(Optional.empty());
-        when(creditCheckRepository.save(any(CreditCheck.class))).thenAnswer(i -> i.getArgument(0));
+        when(creditCheckRepository.saveAndFlush(any(CreditCheck.class))).thenAnswer(i -> i.getArgument(0));
         when(auditEventRepository.save(any(AuditEvent.class))).thenAnswer(i -> i.getArgument(0));
 
         CreditCheck result = service.runCheck(appId, BigDecimal.valueOf(95000), "employed",
@@ -64,7 +64,7 @@ class CreditCheckServiceTest {
         assertTrue(result.getCreditScore() >= 300 && result.getCreditScore() <= 850);
         assertNotNull(result.getRiskBand());
 
-        verify(creditCheckRepository).save(any(CreditCheck.class));
+        verify(creditCheckRepository).saveAndFlush(any(CreditCheck.class));
         verify(auditEventRepository).save(any(AuditEvent.class));
     }
 
